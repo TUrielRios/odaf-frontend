@@ -168,7 +168,7 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
                     Agregar Sobreturno
                 </h3>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-6">
                     <div className="space-y-4">
                         <div className="bg-gray-50/80 p-5 rounded-2xl border border-gray-100 space-y-4">
                             <div className="flex items-center justify-between gap-4 mb-2">
@@ -367,6 +367,7 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
                             <PatientForm
                                 onPatientData={handleNewPatientSubmit}
                                 loading={loading}
+                                submitButtonText="Agendar Sobreturno"
                             />
                         </div>
                     ) : (
@@ -380,7 +381,8 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
                                 Cancelar
                             </Button>
                             <Button 
-                                type="submit" 
+                                type="button" 
+                                onClick={handleSubmit}
                                 disabled={loading} 
                                 className="flex-1 h-12 rounded-xl bg-[#026498] text-white font-black shadow-lg shadow-blue-900/10 hover:shadow-xl hover:-translate-y-0.5 transition-all"
                             >
@@ -388,7 +390,7 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
                             </Button>
                         </div>
                     )}
-                </form>
+                </div>
             </div>
         </div>
     )

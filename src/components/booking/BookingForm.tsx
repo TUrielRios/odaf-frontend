@@ -18,10 +18,6 @@ import {
   Calendar,
   FileText,
   CreditCard,
-  Instagram,
-  Facebook,
-  Twitter,
-  Youtube,
   ArrowLeft
 } from "lucide-react"
 
@@ -33,7 +29,6 @@ export const BookingForm: React.FC = () => {
   const [patientData, setPatientData] = useState<CrearPacienteData | null>(null)
   const [bookingSuccess, setBookingSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [bookingId, setBookingId] = useState<number | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [mesActualBloqueado, setMesActualBloqueado] = useState(false)
 
@@ -49,10 +44,10 @@ export const BookingForm: React.FC = () => {
             setPatientData({
               nombre: paciente.nombre,
               apellido: paciente.apellido,
-              tipo_documento: paciente.tipo_documento,
+              tipo_documento: paciente.tipo_documento as "DNI" | "Pasaporte" | "Cédula",
               numero_documento: paciente.numero_documento,
               fecha_nacimiento: paciente.fecha_nacimiento,
-              sexo: paciente.sexo,
+              sexo: paciente.sexo as "Masculino" | "Femenino" | "Otro",
               email: paciente.email,
               telefono: paciente.telefono,
               direccion: paciente.direccion || "",
@@ -128,18 +123,17 @@ export const BookingForm: React.FC = () => {
       const endMins = endMinutes % 60
       const horaFin = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`
 
-      const turnoResponse = await turnosApi.crear({
+      await turnosApi.crear({
         paciente_id: pacienteId,
         profesional_id: selectedProfessional.id,
         servicio_id: selectedService.id,
         fecha: selectedDateTime.split('T')[0],
         hora_inicio: horaInicio,
         hora_fin: horaFin,
-        estado: "Pendiente",
+        estado: "Confirmado",
         pago_confirmado: false,
       })
 
-      setBookingId(turnoResponse.id)
       setBookingSuccess(true)
     } catch (error: any) {
       console.error("Error creating appointment:", error)
@@ -155,7 +149,6 @@ export const BookingForm: React.FC = () => {
     setSelectedProfessional(null)
     setSelectedDateTime(null)
     setBookingSuccess(false)
-    setBookingId(null)
   }
 
   if (bookingSuccess && selectedService && selectedProfessional && selectedDateTime) {

@@ -24,8 +24,10 @@ interface PaymentStepProps {
 
 const PAYMENT_INFO = {
   amount: 5000,
-  cvu: "0000003100099225468937",
-  alias: "melo2025",
+  cbu: "3840200500000002363134",
+  alias: "Odafodonto",
+  titular: "Adriana Franzil",
+  banco: "Ualá Bank S.A.U.",
   whatsapp: "5491140483693"
 }
 
@@ -93,21 +95,29 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
             Pago de Seña
           </h3>
 
-          <div className="bg-white p-6 sm:p-10 rounded-3xl sm:rounded-[2.5rem] border-2 border-[#026498]/10 space-y-6 sm:space-y-8 shadow-xl shadow-blue-900/5">
+          <div className="bg-white p-6 sm:p-10 rounded-3xl sm:rounded-[2.5rem] border-2 border-[#026498]/10 space-y-4 sm:space-y-6 shadow-xl shadow-blue-900/5">
             <div className="flex flex-col items-center text-center space-y-2 pb-6 border-b border-gray-50">
               <span className="text-gray-400 font-black text-[9px] sm:text-[10px] uppercase tracking-widest">Monto a abonar</span>
               <span className="text-3xl sm:text-4xl font-black text-[#026498]">${PAYMENT_INFO.amount}</span>
               <p className="text-[11px] sm:text-xs text-gray-500 font-medium max-w-[200px]">Transferencia para confirmar tu turno en el sistema.</p>
             </div>
 
-            <div className="space-y-3 sm:space-y-4">
-              <div className="flex justify-between items-center p-4 bg-gray-50/50 rounded-2xl border border-gray-50">
-                <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Alias</span>
-                <span className="text-xs sm:text-sm font-black text-gray-900">{PAYMENT_INFO.alias}</span>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center p-3 sm:p-4 bg-gray-50/50 rounded-2xl border border-gray-50">
+                <span className="text-[9px] text-gray-400 font-black uppercase tracking-widest">Titular</span>
+                <span className="text-[11px] sm:text-xs font-black text-gray-900">{PAYMENT_INFO.titular}</span>
               </div>
-              <div className="flex justify-between items-center p-4 bg-gray-50/50 rounded-2xl border border-gray-50">
-                <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">CVU</span>
-                <span className="text-[10px] sm:text-[11px] font-black text-gray-900">{PAYMENT_INFO.cvu}</span>
+              <div className="flex justify-between items-center p-3 sm:p-4 bg-gray-50/50 rounded-2xl border border-gray-50">
+                <span className="text-[9px] text-gray-400 font-black uppercase tracking-widest">Banco</span>
+                <span className="text-[11px] sm:text-xs font-black text-gray-900">{PAYMENT_INFO.banco}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 sm:p-4 bg-gray-50/50 rounded-2xl border border-gray-50">
+                <span className="text-[9px] text-gray-400 font-black uppercase tracking-widest">Alias</span>
+                <span className="text-[11px] sm:text-xs font-black text-gray-900">{PAYMENT_INFO.alias}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 sm:p-4 bg-gray-50/50 rounded-2xl border border-gray-50">
+                <span className="text-[9px] text-gray-400 font-black uppercase tracking-widest">CBU</span>
+                <span className="text-[10px] sm:text-[11px] font-black text-gray-900 tracking-wider">{PAYMENT_INFO.cbu}</span>
               </div>
             </div>
 

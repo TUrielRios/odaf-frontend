@@ -39,18 +39,18 @@ export const BookingSuccess: React.FC<BookingSuccessProps> = ({ appointmentData,
   return (
     <div className="max-w-2xl mx-auto py-10 animate-in fade-in zoom-in duration-700">
       <div className="bg-white rounded-[3rem] shadow-2xl shadow-blue-900/5 p-12 text-center">
-        <div className="w-24 h-24 rounded-full bg-[#026498] text-white flex items-center justify-center mx-auto mb-8 shadow-xl shadow-blue-900/20">
+        <div className="w-24 h-24 rounded-full bg-[#10b981] text-white flex items-center justify-center mx-auto mb-8 shadow-xl shadow-green-900/20">
           <Check size={48} strokeWidth={4} />
         </div>
         
-        <h2 className="text-4xl font-black text-[#026498] mb-4">¡Turno Confirmado!</h2>
+        <h2 className="text-4xl font-black text-[#10b981] mb-4">¡Turno Confirmado!</h2>
         <p className="text-gray-500 font-medium mb-12">
           Tu cita ha sido agendada con éxito. Podrás ver los detalles en tu panel de usuario.
         </p>
 
         <div className="bg-gray-50/50 rounded-[2.5rem] p-8 space-y-6 mb-12 text-left border border-gray-50">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#026498]">
+            <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#10b981]">
               <Calendar size={20} />
             </div>
             <div>
@@ -60,7 +60,7 @@ export const BookingSuccess: React.FC<BookingSuccessProps> = ({ appointmentData,
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#026498]">
+            <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#10b981]">
               <Clock size={20} />
             </div>
             <div>
@@ -70,7 +70,7 @@ export const BookingSuccess: React.FC<BookingSuccessProps> = ({ appointmentData,
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#026498]">
+            <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#10b981]">
               <User size={20} />
             </div>
             <div>

@@ -973,7 +973,7 @@ export const CalendarView: React.FC = () => {
 
       {showBookingModal && (
         <AdminBookingModal
-          onClose={() => setShowBookingModal(true)}
+          onClose={() => setShowBookingModal(false)}
           onSuccess={() => {
             fetchAppointments()
             setShowBookingModal(false)

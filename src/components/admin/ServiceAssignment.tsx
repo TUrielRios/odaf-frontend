@@ -1,12 +1,35 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card } from "../ui/Card"
 import { Button } from "../ui/Button"
-import { Briefcase, Plus, X, AlertCircle } from 'lucide-react'
+import { Input } from "../ui/Input"
+import { Badge } from "../ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "../ui/dialog"
+import { 
+  Briefcase, 
+  Plus, 
+  X, 
+  AlertCircle, 
+  Search, 
+  Check, 
+  ChevronRight, 
+  Clock, 
+  DollarSign,
+  Layers
+} from 'lucide-react'
 import { adminApi } from "../../api/admin"
 import type { Profesional, Servicio } from "../../types"
+import { useToast } from "../../hooks/use-toast"
+import { cn } from "../../lib/utils"
 
 interface ServiceAssignmentProps {
   professional: Profesional
@@ -14,12 +37,14 @@ interface ServiceAssignmentProps {
 }
 
 export const ServiceAssignment: React.FC<ServiceAssignmentProps> = ({ professional, onServicesUpdate }) => {
+  const { toast } = useToast()
   const [assignedServices, setAssignedServices] = useState<Servicio[]>([])
   const [availableServices, setAvailableServices] = useState<Servicio[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
     fetchData()
@@ -63,10 +88,19 @@ export const ServiceAssignment: React.FC<ServiceAssignmentProps> = ({ profession
 
       setSelectedServiceIds([])
       setShowAddModal(false)
-      alert("Servicios asignados correctamente")
+      
+      toast({
+        title: "Servicios asignados",
+        description: "Los servicios se han vinculado correctamente al profesional.",
+        variant: "default",
+      })
     } catch (error) {
       console.error("Error assigning services:", error)
-      alert("Error al asignar servicios. Intente nuevamente.")
+      toast({
+        title: "Error",
+        description: "No se pudieron asignar los servicios. Intente nuevamente.",
+        variant: "destructive",
+      })
     } finally {
       setSaving(false)
     }
@@ -83,14 +117,22 @@ export const ServiceAssignment: React.FC<ServiceAssignmentProps> = ({ profession
 
       setAssignedServices(newAssigned)
       if (removedService) {
-        setAvailableServices([...availableServices, removedService])
+        setAvailableServices(prev => [...prev, removedService].sort((a, b) => a.nombre.localeCompare(b.nombre)))
       }
 
       onServicesUpdate?.(newAssigned)
-      alert("Servicio removido correctamente")
+      
+      toast({
+        title: "Servicio removido",
+        description: "El servicio ha sido desvinculado del profesional.",
+      })
     } catch (error) {
       console.error("Error removing service:", error)
-      alert("Error al remover servicio. Intente nuevamente.")
+      toast({
+        title: "Error",
+        description: "No se pudo remover el servicio. Intente nuevamente.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -102,147 +144,230 @@ export const ServiceAssignment: React.FC<ServiceAssignmentProps> = ({ profession
     )
   }
 
+  const filteredAvailableServices = useMemo(() => {
+    return availableServices.filter(s => 
+      s.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.categoria.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }, [availableServices, searchTerm])
+
+  const groupedServices = useMemo(() => {
+    const groups: Record<string, Servicio[]> = {}
+    filteredAvailableServices.forEach(s => {
+      if (!groups[s.categoria]) groups[s.categoria] = []
+      groups[s.categoria].push(s)
+    })
+    return groups
+  }, [filteredAvailableServices])
+
   if (loading) {
     return (
-      <Card className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-muted rounded w-1/3"></div>
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-12 bg-muted rounded"></div>
-            ))}
-          </div>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="h-8 bg-muted animate-pulse rounded w-48"></div>
+          <div className="h-10 bg-muted animate-pulse rounded w-32"></div>
         </div>
-      </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-24 bg-muted animate-pulse rounded-xl border border-border"></div>
+          ))}
+        </div>
+      </div>
     )
   }
 
   return (
-    <>
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-semibold text-foreground flex items-center">
-              <Briefcase className="h-5 w-5 mr-2" />
-              Servicios Asignados
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {professional.nombre} {professional.apellido}
-            </p>
-          </div>
-          <Button onClick={() => setShowAddModal(true)} size="sm" disabled={availableServices.length === 0}>
-            <Plus className="h-4 w-4 mr-2" />
-            Asignar Servicios
-          </Button>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h3 className="text-xl font-bold text-foreground flex items-center">
+            <Briefcase className="h-5 w-5 mr-2 text-primary" />
+            Servicios Asignados
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Servicios que {professional.nombre} {professional.apellido} está capacitado para realizar
+          </p>
         </div>
+        <Button 
+          onClick={() => setShowAddModal(true)} 
+          className="shadow-sm hover:shadow-md transition-all duration-200"
+          disabled={availableServices.length === 0}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Asignar Nuevos
+        </Button>
+      </div>
 
-        {assignedServices.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p className="text-lg font-medium mb-2">No hay servicios asignados</p>
-            <p className="text-sm">Asigna servicios a este profesional para que pueda atenderlos</p>
+      {assignedServices.length === 0 ? (
+        <Card className="flex flex-col items-center justify-center py-16 px-4 text-center border-dashed border-2">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+            <Briefcase className="h-8 w-8 text-muted-foreground opacity-40" />
           </div>
-        ) : (
-          <div className="space-y-3">
-            {assignedServices.map((servicio) => (
-              <div
-                key={servicio.id}
-                className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex-1">
-                  <h4 className="font-medium text-foreground">{servicio.nombre}</h4>
-                  <div className="flex items-center gap-4 mt-1">
-                    <span className="text-sm text-muted-foreground">{servicio.categoria}</span>
-                    <span className="text-sm text-muted-foreground">
-                      ${Number(servicio.precio_base).toFixed(2)}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {servicio.duracion_estimada} min
-                    </span>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
+          <p className="text-lg font-semibold text-foreground mb-1">Sin servicios asignados</p>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto mb-6">
+            Este profesional aún no tiene servicios asociados. Asigna al menos uno para que pueda recibir turnos.
+          </p>
+          <Button variant="outline" onClick={() => setShowAddModal(true)} disabled={availableServices.length === 0}>
+            Comenzar a asignar
+          </Button>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {assignedServices.map((servicio) => (
+            <div
+              key={servicio.id}
+              className="group relative bg-card border border-border rounded-xl p-4 hover:shadow-md hover:border-primary/50 transition-all duration-200"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <Badge variant="secondary" className="text-[10px] uppercase tracking-wider font-bold">
+                  {servicio.categoria}
+                </Badge>
+                <button
                   onClick={() => handleRemoveService(servicio.id)}
-                  className="text-red-600 hover:text-red-700"
+                  className="text-muted-foreground hover:text-destructive transition-colors p-1 rounded-full hover:bg-destructive/10"
+                  title="Remover servicio"
                 >
                   <X className="h-4 w-4" />
-                </Button>
+                </button>
               </div>
-            ))}
-          </div>
-        )}
-      </Card>
-
-      {/* Modal para agregar servicios */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-background rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-border">
-              <h3 className="text-lg font-semibold text-foreground">Asignar Servicios</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                Selecciona los servicios que este profesional puede atender
-              </p>
-            </div>
-
-            <div className="p-6">
-              {availableServices.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No hay más servicios disponibles para asignar</p>
+              
+              <h4 className="font-bold text-foreground mb-3 line-clamp-1">{servicio.nombre}</h4>
+              
+              <div className="flex items-center gap-4">
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3 mr-1" />
+                  {servicio.duracion_estimada} min
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  {availableServices.map((servicio) => (
-                    <label
-                      key={servicio.id}
-                      className="flex items-center p-4 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedServiceIds.includes(servicio.id)}
-                        onChange={() => toggleServiceSelection(servicio.id)}
-                        className="rounded border-input mr-3"
-                      />
-                      <div className="flex-1">
-                        <h4 className="font-medium text-foreground">{servicio.nombre}</h4>
-                        <div className="flex items-center gap-4 mt-1">
-                          <span className="text-sm text-muted-foreground">{servicio.categoria}</span>
-                          <span className="text-sm text-muted-foreground">
-                            ${Number(servicio.precio_base).toFixed(2)}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            {servicio.duracion_estimada} min
-                          </span>
-                        </div>
-                      </div>
-                    </label>
-                  ))}
+                <div className="flex items-center text-xs font-semibold text-primary">
+                  <DollarSign className="h-3 w-3" />
+                  {Number(servicio.precio_base).toLocaleString()}
                 </div>
-              )}
+              </div>
             </div>
-
-            <div className="px-6 py-4 border-t border-border flex justify-end space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowAddModal(false)
-                  setSelectedServiceIds([])
-                }}
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleAddServices}
-                disabled={selectedServiceIds.length === 0 || saving}
-              >
-                {saving ? "Asignando..." : `Asignar ${selectedServiceIds.length} servicio(s)`}
-              </Button>
-            </div>
-          </div>
+          ))}
         </div>
       )}
-    </>
+
+      <Dialog open={showAddModal} onOpenChange={(open) => {
+        if (!open) {
+          setShowAddModal(false)
+          setSelectedServiceIds([])
+          setSearchTerm("")
+        } else {
+          setShowAddModal(true)
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle className="text-2xl">Asignar Servicios</DialogTitle>
+            <DialogDescription>
+              Busca y selecciona los servicios que deseas habilitar para este profesional.
+            </DialogDescription>
+            
+            <div className="relative mt-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+           <Input
+                 placeholder="Buscar por nombre o categoría..."
+                 value={searchTerm}
+                 onChange={(e) => setSearchTerm(e.target.value)}
+                 className="pl-10 h-11 bg-muted/40 border-muted"
+               />
+            </div>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {Object.keys(groupedServices).length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-4">
+                  <AlertCircle className="h-6 w-6 text-muted-foreground opacity-40" />
+                </div>
+                <p className="text-muted-foreground font-medium">
+                  {searchTerm ? "No se encontraron servicios con ese nombre" : "No hay más servicios disponibles"}
+                </p>
+              </div>
+            ) : (
+              Object.entries(groupedServices).map(([categoria, servicios]) => (
+                <div key={categoria} className="space-y-3">
+                  <h5 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center">
+                    <Layers className="h-3 w-3 mr-2" />
+                    {categoria}
+                    <span className="ml-2 h-[1px] flex-1 bg-border/50"></span>
+                  </h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {servicios.map((servicio) => {
+                      const isSelected = selectedServiceIds.includes(servicio.id)
+                      return (
+                        <div
+                          key={servicio.id}
+                          onClick={() => toggleServiceSelection(servicio.id)}
+                          className={cn(
+                            "flex items-center gap-3 p-3 border rounded-xl cursor-pointer transition-all duration-200",
+                            isSelected 
+                              ? "bg-primary/5 border-primary shadow-sm ring-1 ring-primary/20" 
+                              : "bg-background border-border hover:border-primary/50 hover:bg-muted/30"
+                          )}
+                        >
+                          <div className={cn(
+                            "flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors",
+                            isSelected ? "bg-primary border-primary text-white" : "border-input bg-background"
+                          )}>
+                            {isSelected && <Check className="h-3 w-3" />}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <p className={cn(
+                              "text-sm font-semibold truncate",
+                              isSelected ? "text-primary" : "text-foreground"
+                            )}>
+                              {servicio.nombre}
+                            </p>
+                            <div className="flex items-center gap-3 mt-0.5">
+                              <span className="text-[10px] text-muted-foreground flex items-center">
+                                <Clock className="h-2.5 w-2.5 mr-1" />
+                                {servicio.duracion_estimada}'
+                              </span>
+                              <span className="text-[10px] font-medium text-muted-foreground">
+                                ${Number(servicio.precio_base).toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <DialogFooter className="p-6 pt-2 border-t border-border bg-muted/20">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowAddModal(false)
+                setSelectedServiceIds([])
+                setSearchTerm("")
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleAddServices}
+              disabled={selectedServiceIds.length === 0 || saving}
+              className="min-w-[140px]"
+            >
+              {saving ? (
+                <div className="flex items-center">
+                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                  Asignando...
+                </div>
+              ) : (
+                `Asignar ${selectedServiceIds.length} seleccionado(s)`
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }

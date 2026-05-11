@@ -11,9 +11,14 @@ import { User, Heart, Shield, Phone, Mail, MapPin, FileText } from "lucide-react
 interface PatientFormProps {
   onPatientData: (data: CrearPacienteData) => void
   loading?: boolean
+  submitButtonText?: string
 }
 
-export const PatientForm: React.FC<PatientFormProps> = ({ onPatientData, loading = false }) => {
+export const PatientForm: React.FC<PatientFormProps> = ({ 
+  onPatientData, 
+  loading = false,
+  submitButtonText = "Siguiente Paso"
+}) => {
   const [obrasSociales, setObrasSociales] = useState<ObraSocial[]>([])
   const [formData, setFormData] = useState<CrearPacienteData>({
     apellido: "",
@@ -270,7 +275,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({ onPatientData, loading
           disabled={loading}
           className="w-full h-16 sm:h-20 bg-[#026498] text-white font-black rounded-2xl sm:rounded-[1.5rem] text-lg sm:text-xl shadow-xl shadow-blue-900/10 hover:bg-[#0c4a6e] transition-all transform hover:-translate-y-1 uppercase tracking-widest disabled:opacity-50"
         >
-          {loading ? "Cargando..." : "Siguiente Paso"}
+          {loading ? "Cargando..." : submitButtonText}
         </button>
       </form>
     </div>

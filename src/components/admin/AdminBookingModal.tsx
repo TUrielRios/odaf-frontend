@@ -318,6 +318,7 @@ export const AdminBookingModal: React.FC<AdminBookingModalProps> = ({ onClose, o
                         <PatientForm
                           onPatientData={handlePatientSubmit}
                           loading={loading}
+                          submitButtonText="Agendar Turno"
                         />
                      </div>
                    )}
