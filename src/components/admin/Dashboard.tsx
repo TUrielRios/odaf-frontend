@@ -19,6 +19,7 @@ interface DashboardStats {
   totalServicios: number
   turnosPorEstado: Record<string, number>
   turnosRecientes: Turno[]
+  turnosPendientes: Turno[]
   turnosPorProf: Record<string, number>
   appointmentTrend: { fecha: string; count: number }[]
 }
@@ -31,6 +32,7 @@ export const Dashboard: React.FC<{ onNavigateToCalendar?: () => void }> = ({ onN
     totalServicios: 0,
     turnosPorEstado: {},
     turnosRecientes: [],
+    turnosPendientes: [],
     turnosPorProf: {},
     appointmentTrend: []
   })
@@ -68,8 +70,12 @@ export const Dashboard: React.FC<{ onNavigateToCalendar?: () => void }> = ({ onN
           turnosPorEstado[turno.estado] = (turnosPorEstado[turno.estado] || 0) + 1
         })
 
-        // Recent appointments (last 5)
-        const turnosRecientes = [...turnos]
+        // Pending appointments
+        const turnosPendientes = turnos.filter(turno => turno.estado === 'Pendiente')
+          .sort((a, b) => a.fecha.localeCompare(b.fecha) || a.hora_inicio.localeCompare(b.hora_inicio))
+
+        // Recent appointments (last 5, non-pending)
+        const turnosRecientes = turnos.filter(t => t.estado !== 'Pendiente')
           .sort((a, b) => {
             const dateComparison = b.fecha.localeCompare(a.fecha)
             if (dateComparison !== 0) return dateComparison
@@ -103,6 +109,7 @@ export const Dashboard: React.FC<{ onNavigateToCalendar?: () => void }> = ({ onN
           totalServicios: serviciosResponse.data?.length || 0,
           turnosPorEstado,
           turnosRecientes,
+          turnosPendientes,
           turnosPorProf,
           appointmentTrend
         })
@@ -131,6 +138,55 @@ export const Dashboard: React.FC<{ onNavigateToCalendar?: () => void }> = ({ onN
     } catch (error) {
       console.error('Error confirming all appointments:', error)
       alert('Error al confirmar los turnos')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleApprove = async (id: number) => {
+    try {
+      setLoading(true)
+      await turnosApi.confirmarPago(id, true)
+      // Refresh data locally instead of reload for better UX
+      setStats(prev => ({
+        ...prev,
+        turnosPendientes: prev.turnosPendientes.filter(t => t.id !== id),
+        turnosPorEstado: {
+          ...prev.turnosPorEstado,
+          'Pendiente': (prev.turnosPorEstado['Pendiente'] || 1) - 1,
+          'Confirmado por email': (prev.turnosPorEstado['Confirmado por email'] || 0) + 1
+        }
+      }))
+      alert('Turno aprobado exitosamente')
+    } catch (error) {
+      console.error('Error approving appointment:', error)
+      alert('Error al aprobar el turno')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleReject = async (id: number) => {
+    if (!window.confirm('¿Estás seguro de que quieres rechazar este turno? El paciente recibirá una notificación.')) {
+      return
+    }
+
+    try {
+      setLoading(true)
+      await turnosApi.confirmarPago(id, false)
+      setStats(prev => ({
+        ...prev,
+        turnosPendientes: prev.turnosPendientes.filter(t => t.id !== id),
+        turnosPorEstado: {
+          ...prev.turnosPorEstado,
+          'Pendiente': (prev.turnosPorEstado['Pendiente'] || 1) - 1,
+          'Cancelado': (prev.turnosPorEstado['Cancelado'] || 0) + 1
+        }
+      }))
+      alert('Turno rechazado correctamente')
+    } catch (error) {
+      console.error('Error rejecting appointment:', error)
+      alert('Error al rechazar el turno')
     } finally {
       setLoading(false)
     }
@@ -225,6 +281,69 @@ export const Dashboard: React.FC<{ onNavigateToCalendar?: () => void }> = ({ onN
           )
         })}
       </div>
+
+      {/* Pending Appointments Section */}
+      {stats.turnosPendientes.length > 0 && (
+        <Card className="p-6 border-2 border-amber-100 bg-amber-50/20">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-black text-gray-900 flex items-center gap-3">
+              <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600">
+                <Clock className="h-6 w-6" />
+              </div>
+              Turnos Pendientes de Aprobación
+              <span className="ml-2 px-3 py-1 bg-amber-100 text-amber-700 text-sm rounded-full">
+                {stats.turnosPendientes.length}
+              </span>
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {stats.turnosPendientes.map((turno) => (
+              <div key={turno.id} className="bg-white p-5 rounded-2xl border border-amber-100 shadow-sm hover:shadow-md transition-all">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Paciente</p>
+                    <p className="font-bold text-gray-900">{turno.paciente?.nombre} {turno.paciente?.apellido}</p>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase">DNI: {turno.paciente?.numero_documento}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-black text-amber-600 bg-amber-50 px-2 py-1 rounded-lg">
+                      {new Date(turno.fecha + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                    </p>
+                    <p className="text-xs font-bold text-gray-400 mt-1">{turno.hora_inicio} hs</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 mb-6">
+                  <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <Briefcase size={14} className="text-blue-500" />
+                    <span className="font-bold uppercase tracking-tight">{turno.servicio?.nombre}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <Users size={14} className="text-purple-500" />
+                    <span className="font-bold uppercase tracking-tight">Dr. {turno.profesional?.apellido}</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => handleReject(turno.id)}
+                    className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
+                  >
+                    Rechazar
+                  </button>
+                  <button
+                    onClick={() => handleApprove(turno.id)}
+                    className="flex-1 py-2 text-[10px] font-black uppercase tracking-widest text-white bg-green-600 hover:bg-green-700 rounded-xl shadow-lg shadow-green-900/10 transition-all transform hover:-translate-y-0.5"
+                  >
+                    Aprobar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Row 2: Status breakdown */}
       <div className="grid grid-cols-1 gap-6">

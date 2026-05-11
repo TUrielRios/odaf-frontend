@@ -929,9 +929,22 @@ export const CalendarView: React.FC = () => {
 
               <div className="flex justify-end space-x-3 pt-4">
                 <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteAppointment(selectedAppointment.id)}>
-                  Eliminar Turno
+                  Eliminar
                 </Button>
                 <div className="flex-1" />
+                
+                {selectedAppointment.estado === 'Pendiente' && (
+                  <Button 
+                    className="bg-green-600 hover:bg-green-700 text-white font-bold"
+                    onClick={() => {
+                      handleQuickConfirm(selectedAppointment.id)
+                      setSelectedAppointment(null)
+                    }}
+                  >
+                    Confirmar Pago
+                  </Button>
+                )}
+
                 <Button variant="outline" onClick={() => setSelectedAppointment(null)}>
                   Cerrar
                 </Button>

@@ -130,7 +130,7 @@ export const BookingForm: React.FC = () => {
         fecha: selectedDateTime.split('T')[0],
         hora_inicio: horaInicio,
         hora_fin: horaFin,
-        estado: "Confirmado",
+        estado: "Pendiente",
         pago_confirmado: false,
       })
 

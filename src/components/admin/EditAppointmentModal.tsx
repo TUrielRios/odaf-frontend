@@ -118,6 +118,7 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({ appo
                             onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
                             className="w-full border rounded-md p-2"
                         >
+                            <option value="Pendiente">Pendiente (Revisar seña)</option>
                             <option value="Creado">Creado</option>
                             <option value="Esperando confirmación">Esperando confirmación</option>
                             <option value="Confirmado por email">Confirmado por email</option>

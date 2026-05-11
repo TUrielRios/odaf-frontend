@@ -26,7 +26,7 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
         fecha: initialData?.fecha || new Date().toISOString().split('T')[0],
         hora_inicio: initialData?.hora_inicio || '10:00',
         hora_fin: initialData?.hora_fin || '10:30',
-        estado: 'Confirmado',
+        estado: 'Pendiente',
         observaciones: '',
         sobre_turno: initialData?.sobre_turno || false
     })
@@ -340,6 +340,7 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
                                     onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
                                     className="w-full border border-gray-200 rounded-xl p-3 h-12 bg-white text-sm focus:ring-2 focus:ring-[#026498] focus:border-transparent outline-none transition-all"
                                 >
+                                    <option value="Pendiente">Pendiente</option>
                                     <option value="Confirmado">Confirmado</option>
                                     <option value="Creado">Creado</option>
                                     <option value="En sala de espera">En sala de espera</option>
