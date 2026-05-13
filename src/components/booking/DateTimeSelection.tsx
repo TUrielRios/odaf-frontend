@@ -65,6 +65,15 @@ export const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
     today.setHours(0,0,0,0)
     if (date < today) return false
 
+    // Si el mes actual está bloqueado (ya tiene turno), deshabilitar fechas de este mes
+    if (mesActualBloqueado) {
+      const currentMonth = new Date().getMonth()
+      const currentYear = new Date().getFullYear()
+      if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+        return false
+      }
+    }
+
     const dayOfWeek = date.getDay()
     if (!professionalSchedule) return dayOfWeek !== 0
     const dayNames = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']
@@ -205,6 +214,14 @@ export const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
               <h3 className="font-black text-gray-900">Fecha del turno</h3>
             </div>
             {renderCalendar()}
+            
+            {mesActualBloqueado && (
+              <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100">
+                <p className="text-[10px] text-amber-700 font-bold leading-tight">
+                  Ya posees un turno en el mes actual. Solo puedes reservar para los próximos meses.
+                </p>
+              </div>
+            )}
 
             {selectedDate && (
               <div className="mt-8 pt-6 border-t border-gray-50 flex items-center justify-between">
