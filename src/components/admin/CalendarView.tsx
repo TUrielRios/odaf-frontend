@@ -19,6 +19,7 @@ import {
   Heart,
   Edit as EditIcon,
   FileText,
+  Trash2,
 } from 'lucide-react'
 import { turnosApi } from '../../api'
 import type { Turno, Profesional } from '../../types'
@@ -927,8 +928,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
       </div>
 
       {selectedAppointment && !showEditModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2rem] shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100 flex flex-col">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-[95%] sm:max-w-2xl h-fit max-h-[90vh] overflow-hidden border border-gray-100 flex flex-col">
             <div className={`px-8 py-6 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white`}>
               <div>
                 <h3 className="text-xl font-black text-gray-900 tracking-tight">Detalles del Turno</h3>
@@ -1082,6 +1083,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                   Iniciar Atención
                 </Button>
               )}
+
+              <Button
+                variant="outline"
+                className="w-full rounded-2xl h-12 border-2 border-red-100 font-black text-xs uppercase tracking-widest text-red-600 hover:bg-red-50 hover:border-red-200 transition-all"
+                onClick={() => handleDeleteAppointment(selectedAppointment.id)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Eliminar Turno
+              </Button>
             </div>
           </div>
         </div>

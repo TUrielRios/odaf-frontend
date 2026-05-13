@@ -74,9 +74,18 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({ appo
     }
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-                <h3 className="text-lg font-semibold mb-4">Editar Turno</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[110] p-2 sm:p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-[2rem] shadow-2xl w-[95%] sm:max-w-xl h-fit max-h-[90vh] overflow-hidden border border-gray-100 flex flex-col">
+                <div className="px-8 py-6 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white">
+                    <div>
+                        <h3 className="text-xl font-black text-gray-900 tracking-tight">Editar Turno</h3>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-0.5">Modificación de agenda</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                        <X size={20} className="text-gray-400" />
+                    </button>
+                </div>
+                <div className="p-8 overflow-y-auto custom-scrollbar">
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="relative">
                         <label className="block text-sm font-medium mb-1">Paciente</label>
@@ -241,6 +250,7 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({ appo
                         </div>
                     </div>
                 </form>
+                </div>
             </div>
         </div>
     )
