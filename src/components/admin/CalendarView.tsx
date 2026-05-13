@@ -926,7 +926,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
         {viewType === 'month' && renderMonthView()}
       </div>
 
-      {selectedAppointment && (
+      {selectedAppointment && !showEditModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
           <div className="bg-white rounded-[2rem] shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100 flex flex-col">
             <div className={`px-8 py-6 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white`}>
