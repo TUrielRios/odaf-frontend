@@ -94,7 +94,12 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
     const handleNewPatientSubmit = async (data: any) => {
         setLoading(true)
         try {
-            const newPatient = await pacientesApi.crear(data)
+            const patientData = {
+                ...data,
+                condicion: data.condicion || 'Activo',
+                tipo_facturacion: data.tipo_facturacion || 'B',
+            }
+            const newPatient = await pacientesApi.crear(patientData)
             await turnosApi.crear({
                 paciente_id: newPatient.id,
                 profesional_id: formData.profesional_id,
@@ -110,7 +115,8 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
             onClose()
         } catch (error: any) {
             console.error('Error creating patient and appointment:', error)
-            alert('Error al crear el paciente o el turno.')
+            const msg = error?.response?.data?.error || error?.response?.data?.errors?.[0]?.msg || error?.message || 'Error al crear el paciente o el turno.'
+            alert(msg)
         } finally {
             setLoading(false)
         }
@@ -344,7 +350,11 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
                                     <option value="Confirmado">Confirmado</option>
                                     <option value="Creado">Creado</option>
                                     <option value="En sala de espera">En sala de espera</option>
+                                    <option value="Atendiéndose">Atendiéndose</option>
                                     <option value="Atendido">Atendido</option>
+                                    <option value="Cancelado">Cancelado</option>
+                                    <option value="Ausente">Ausente</option>
+                                    <option value="Ausente sin aviso">Ausente sin aviso</option>
                                 </select>
                             </div>
                             <div>

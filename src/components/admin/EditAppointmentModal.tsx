@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
-import { turnosApi, adminApi, recordatoriosApi } from '../../api'
-import type { Turno, Profesional } from '../../types'
-import { Mail } from 'lucide-react'
+import { turnosApi, adminApi, recordatoriosApi, pacientesApi } from '../../api'
+import type { Turno, Profesional, Paciente } from '../../types'
+import { Mail, Search, User as UserIcon, X } from 'lucide-react'
 
 interface EditAppointmentModalProps {
     appointment: Turno
@@ -17,12 +17,17 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({ appo
         hora_inicio: appointment.hora_inicio,
         hora_fin: appointment.hora_fin,
         profesional_id: appointment.profesional_id,
+        paciente_id: appointment.paciente_id,
         estado: appointment.estado,
         observaciones: appointment.observaciones || ''
     })
     const [loading, setLoading] = useState(false)
     const [profesionales, setProfesionales] = useState<Profesional[]>([])
     const [sendingReminder, setSendingReminder] = useState(false)
+    const [searchTerm, setSearchTerm] = useState('')
+    const [pacientes, setPacientes] = useState<Paciente[]>([])
+    const [showPatientSearch, setShowPatientSearch] = useState(false)
+    const [selectedPatient, setSelectedPatient] = useState<Paciente | null>(appointment.paciente || null)
 
     useEffect(() => {
         const fetchProfesionales = async () => {
@@ -35,6 +40,22 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({ appo
         }
         fetchProfesionales()
     }, [])
+
+    useEffect(() => {
+        if (searchTerm.trim().length >= 3) {
+            const delayDebounceFn = setTimeout(async () => {
+                try {
+                    const response = await pacientesApi.listar({ search: searchTerm, limit: 5 })
+                    setPacientes(response.data)
+                } catch (error) {
+                    console.error('Error searching patients:', error)
+                }
+            }, 300)
+            return () => clearTimeout(delayDebounceFn)
+        } else {
+            setPacientes([])
+        }
+    }, [searchTerm])
 
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -57,14 +78,63 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({ appo
             <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
                 <h3 className="text-lg font-semibold mb-4">Editar Turno</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
+                    <div className="relative">
                         <label className="block text-sm font-medium mb-1">Paciente</label>
-                        <Input
-                            type="text"
-                            value={`${appointment.paciente?.apellido || ''}, ${appointment.paciente?.nombre || ''}`}
-                            disabled
-                            className="bg-gray-100"
-                        />
+                        {!showPatientSearch ? (
+                            <div className="flex items-center gap-2">
+                                <div className="flex-1 bg-gray-50 border rounded-md p-2 text-sm font-bold text-gray-700 flex items-center gap-2">
+                                    <UserIcon size={14} className="text-[#026498]" />
+                                    {selectedPatient ? `${selectedPatient.apellido}, ${selectedPatient.nombre}` : 'Sin paciente'}
+                                </div>
+                                <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    className="h-9 text-xs"
+                                    onClick={() => setShowPatientSearch(true)}
+                                >
+                                    Cambiar
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                                    <Input
+                                        placeholder="Buscar por nombre or DNI..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="pl-9"
+                                        autoFocus
+                                    />
+                                    <button 
+                                        type="button"
+                                        onClick={() => setShowPatientSearch(false)}
+                                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                </div>
+                                {pacientes.length > 0 && (
+                                    <div className="absolute z-10 w-full bg-white border rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                                        {pacientes.map((p) => (
+                                            <div
+                                                key={p.id}
+                                                className="p-2 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+                                                onClick={() => {
+                                                    setSelectedPatient(p)
+                                                    setFormData({ ...formData, paciente_id: p.id })
+                                                    setShowPatientSearch(false)
+                                                    setSearchTerm('')
+                                                }}
+                                            >
+                                                <p className="text-sm font-bold text-gray-900">{p.apellido}, {p.nombre}</p>
+                                                <p className="text-[10px] text-gray-500 font-medium">DNI: {p.numero_documento}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div>
@@ -129,6 +199,7 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({ appo
                             <option value="Atendido">Atendido</option>
                             <option value="Cancelado">Cancelado</option>
                             <option value="Ausente">Ausente</option>
+                            <option value="Ausente sin aviso">Ausente sin aviso</option>
                         </select>
                     </div>
                     <div>

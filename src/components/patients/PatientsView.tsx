@@ -37,7 +37,12 @@ import { TurnosSection } from "./TurnosSection"
 
 type TabType = "info" | "historia" | "odontograma" | "prescripciones" | "tratamientos" | "archivos" | "cuenta_corriente" | "recordatorios" | "turnos"
 
-export const PatientsView: React.FC = () => {
+interface PatientsViewProps {
+  initialPatientId?: string | null
+  onClearPatient?: () => void
+}
+
+export const PatientsView: React.FC<PatientsViewProps> = ({ initialPatientId, onClearPatient }) => {
   const [patients, setPatients] = useState<Paciente[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -57,6 +62,29 @@ export const PatientsView: React.FC = () => {
     fetchPatients()
     fetchObrasSociales()
   }, [currentPage, searchTerm])
+
+  useEffect(() => {
+    if (initialPatientId) {
+      handleFetchAndShowPatient(initialPatientId)
+    }
+  }, [initialPatientId])
+
+  const handleFetchAndShowPatient = async (id: string) => {
+    try {
+      setLoading(true)
+      const patient = await pacientesApi.obtener(id)
+      if (patient) {
+        setSelectedPatient(patient)
+        setModalMode("view")
+        setActiveTab("info")
+        setShowModal(true)
+      }
+    } catch (error) {
+      console.error("Error fetching initial patient:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const fetchObrasSociales = async () => {
     try {
@@ -366,7 +394,10 @@ export const PatientsView: React.FC = () => {
                       Editar Paciente
                     </Button>
                   )}
-                  <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
+                  <button onClick={() => {
+                    setShowModal(false)
+                    if (onClearPatient) onClearPatient()
+                  }} className="text-gray-500 hover:text-gray-700">
                     <X className="h-5 w-5" />
                   </button>
                 </div>

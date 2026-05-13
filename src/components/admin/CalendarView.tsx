@@ -15,6 +15,10 @@ import {
   LayoutGrid,
   Plus,
   Search,
+  X,
+  Heart,
+  Edit as EditIcon,
+  FileText,
 } from 'lucide-react'
 import { turnosApi } from '../../api'
 import type { Turno, Profesional } from '../../types'
@@ -22,6 +26,7 @@ import { EditAppointmentModal } from './EditAppointmentModal'
 import { AdminAppointmentModal } from './AdminAppointmentModal'
 import { AdminBookingModal } from './AdminBookingModal'
 import { profesionalesApi } from '../../api/profesionales'
+import { feriadosApi, type Feriado } from '../../api/feriados'
 
 type ViewType = 'day' | 'week' | 'month'
 
@@ -39,9 +44,27 @@ const STATUS_COLORS = {
   'Atendido': '#06B6D4', // Cyan
   'Cancelado': '#EF4444', // Red
   'Ausente': '#000000', // Black
+  'Ausente sin aviso': '#991B1B', // Dark Red
 } as const
 
-export const CalendarView: React.FC = () => {
+// Simplified legend entries (collapse duplicate "Confirmado" variants)
+const LEGEND_ENTRIES: [string, string][] = [
+  ['Pendiente', '#F59E0B'],
+  ['Creado', '#3B82F6'],
+  ['Confirmado', '#22C55E'],
+  ['En sala de espera', '#A855F7'],
+  ['Atendiéndose', '#EC4899'],
+  ['Atendido', '#06B6D4'],
+  ['Cancelado', '#EF4444'],
+  ['Ausente', '#000000'],
+  ['Ausente sin aviso', '#991B1B'],
+]
+
+interface CalendarViewProps {
+  onNavigateToPatient?: (id: string) => void
+}
+
+export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient }) => {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [appointments, setAppointments] = useState<Turno[]>([])
   const [professionals, setProfessionals] = useState<Profesional[]>([])
@@ -57,6 +80,8 @@ export const CalendarView: React.FC = () => {
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [newAppointmentData, setNewAppointmentData] = useState<{ fecha: string, hora_inicio: string, sobre_turno: boolean } | null>(null)
   const [draggingAppointment, setDraggingAppointment] = useState<Turno | null>(null)
+  const [feriados, setFeriados] = useState<Feriado[]>([])
+  const [splitByProfessional, setSplitByProfessional] = useState(false)
 
   const TIME_SLOTS = []
   for (let h = 8; h <= 20; h++) {
@@ -67,6 +92,7 @@ export const CalendarView: React.FC = () => {
   useEffect(() => {
     fetchAppointments()
     fetchProfessionals()
+    fetchFeriados()
   }, [currentDate, viewType])
 
   // Patient search
@@ -99,6 +125,24 @@ export const CalendarView: React.FC = () => {
     } catch (error) {
       console.error('Error fetching professionals:', error)
     }
+  }
+
+  const fetchFeriados = async () => {
+    try {
+      const year = currentDate.getFullYear()
+      const data = await feriadosApi.listar(year)
+      setFeriados(data || [])
+    } catch (error) {
+      console.error('Error fetching feriados:', error)
+    }
+  }
+
+  const getHolidayForDate = (date: Date): Feriado | undefined => {
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    const d = String(date.getDate()).padStart(2, '0')
+    const dateStr = `${y}-${m}-${d}`
+    return feriados.find(f => f.fecha === dateStr)
   }
 
   const fetchAppointments = async () => {
@@ -379,95 +423,127 @@ export const CalendarView: React.FC = () => {
     const day = String(currentDate.getDate()).padStart(2, '0')
     const dateString = `${year}-${month}-${day}`
 
+    const dayHoliday = getHolidayForDate(currentDate)
+    const activeProfessionals = professionals.filter(p => p.estado === 'Activo')
+    const cols = splitByProfessional ? activeProfessionals.length : 1
+
     return (
       <Card className="overflow-hidden border-none shadow-xl bg-white rounded-2xl flex flex-col h-full">
-        <div className="grid grid-cols-[100px_1fr] bg-gray-100 border-b border-gray-200 sticky top-0 z-20">
+        <div className={`grid bg-gray-100 border-b border-gray-200 sticky top-0 z-20`} style={{ gridTemplateColumns: `100px repeat(${cols}, 1fr)` }}>
           <div className="p-2 border-r border-gray-200 flex items-center justify-center">
             <Clock className="h-4 w-4 text-gray-500" />
           </div>
-          <div className="p-2 text-center bg-blue-50/50">
-            <div className="text-[10px] font-black uppercase tracking-widest text-blue-600">
-              {currentDate.toLocaleDateString('es-ES', { weekday: 'long' })}
+          {!splitByProfessional ? (
+            <div className={`p-2 text-center ${dayHoliday ? 'bg-red-50' : 'bg-blue-50/50'}`}>
+              <div className={`text-[10px] font-black uppercase tracking-widest ${dayHoliday ? 'text-red-600' : 'text-blue-600'}`}>
+                {currentDate.toLocaleDateString('es-ES', { weekday: 'long' })}
+              </div>
+              <div className={`text-lg font-black ${dayHoliday ? 'text-red-700' : 'text-[#026498]'}`}>
+                {currentDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </div>
+              {dayHoliday && (
+                <div className="text-[10px] font-bold text-red-600 mt-0.5">🚩 {dayHoliday.descripcion || 'Feriado'}</div>
+              )}
             </div>
-            <div className="text-lg font-black text-[#026498]">
-              {currentDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </div>
-          </div>
+          ) : (
+            activeProfessionals.map((prof) => (
+              <div key={prof.id} className="p-2 text-center border-r border-gray-200 last:border-r-0 bg-blue-50/30">
+                <div className="text-[10px] font-black uppercase tracking-widest text-[#026498] truncate">
+                  {prof.nombre} {prof.apellido}
+                </div>
+                <div className="text-[8px] font-bold text-gray-500 uppercase">{prof.especialidad}</div>
+              </div>
+            ))
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto bg-white relative">
           <div className="relative">
             {/* Grid Lines */}
             {TIME_SLOTS.map((slot) => (
-              <div key={slot} className="grid grid-cols-[100px_1fr] border-b border-gray-50 h-[40px]">
+              <div key={slot} className="grid border-b border-gray-50 h-[40px]" style={{ gridTemplateColumns: `100px repeat(${cols}, 1fr)` }}>
                 <div className="p-1 text-[10px] font-bold text-gray-400 border-r border-gray-100 text-center flex items-center justify-center bg-gray-50/30">
                   {slot}
                 </div>
-                <div 
-                  className={`relative group h-[40px] cursor-pointer transition-colors ${draggingAppointment ? 'bg-blue-50/10' : 'hover:bg-blue-50/20'}`}
-                  onClick={() => {
-                    setNewAppointmentData({ fecha: dateString, hora_inicio: slot, sobre_turno: false })
-                    setShowNewModal(true)
-                  }}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault()
-                    handleDropAppointment(dateString, slot)
-                  }}
-                />
+                {Array.from({ length: cols }).map((_, i) => (
+                  <div 
+                    key={i}
+                    className={`relative group h-[40px] border-r border-gray-50 last:border-r-0 cursor-pointer transition-colors ${draggingAppointment ? 'bg-blue-50/10' : 'hover:bg-blue-50/20'}`}
+                    onClick={() => {
+                      const profId = splitByProfessional ? activeProfessionals[i].id : (selectedProfessionalId || undefined)
+                      setNewAppointmentData({ 
+                        fecha: dateString, 
+                        hora_inicio: slot, 
+                        sobre_turno: false,
+                        profesional_id: profId as number
+                      })
+                      setShowNewModal(true)
+                    }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      handleDropAppointment(dateString, slot)
+                    }}
+                  />
+                ))}
               </div>
             ))}
 
             {/* Absolute Appointments */}
             <div className="absolute top-0 left-[100px] right-0 bottom-0 pointer-events-none">
-              {getAppointmentLayout(dayAppointments).map((appt) => {
-                const statusColor = getStatusColor(appt.estado)
-                const isLight = ['#F59E0B', '#EAB308', '#22C55E'].includes(statusColor)
+              {(!splitByProfessional ? [dayAppointments] : activeProfessionals.map(p => dayAppointments.filter(a => a.profesional_id === p.id))).map((group, colIdx) => {
+                const colWidth = 100 / cols
+                const colLeft = colIdx * colWidth
                 
-                return (
-                  <div
-                    key={appt.id}
-                    className="absolute p-0.5 pointer-events-auto transition-all"
-                    style={{
-                      top: `${appt.top}px`,
-                      height: `${appt.height}px`,
-                      left: `${appt.left}%`,
-                      width: `${appt.width}%`,
-                    }}
-                  >
+                return getAppointmentLayout(group).map((appt) => {
+                  const statusColor = getStatusColor(appt.estado)
+                  const isLight = ['#F59E0B', '#EAB308', '#22C55E'].includes(statusColor)
+                  
+                  return (
                     <div
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData('appointmentId', appt.id.toString())
-                        setDraggingAppointment(appt)
-                      }}
-                      onDragEnd={() => setDraggingAppointment(null)}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setSelectedAppointment(appt)
-                      }}
-                      className="h-full w-full rounded-md shadow-md text-[10px] cursor-move hover:brightness-95 transition-all border-l-4 overflow-hidden flex flex-col p-2"
+                      key={appt.id}
+                      className="absolute p-0.5 pointer-events-auto transition-all"
                       style={{
-                        backgroundColor: statusColor,
-                        borderColor: 'rgba(0,0,0,0.2)',
-                        color: isLight ? '#000' : '#FFF',
-                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
+                        top: `${appt.top}px`,
+                        height: `${appt.height}px`,
+                        left: `${colLeft + (appt.left * colWidth / 100)}%`,
+                        width: `${appt.width * colWidth / 100}%`,
                       }}
                     >
-                      <div className="font-black truncate uppercase leading-tight text-[9px] mb-0.5">
-                        {getInitials(appt.profesional)} - {appt.paciente?.apellido} {appt.paciente?.nombre}
-                      </div>
-                      <div className="text-[8px] font-bold opacity-90 leading-none">
-                        {appt.hora_inicio.substring(0, 5)} - {appt.hora_fin.substring(0, 5)}
-                      </div>
-                      {appt.height > 40 && (
-                        <div className="text-[7px] opacity-80 truncate mt-0.5 font-medium">
-                          {appt.servicio?.nombre}
+                      <div
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('appointmentId', appt.id.toString())
+                          setDraggingAppointment(appt)
+                        }}
+                        onDragEnd={() => setDraggingAppointment(null)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedAppointment(appt)
+                        }}
+                        className="h-full w-full rounded-md shadow-md text-[10px] cursor-move hover:brightness-95 transition-all border-l-4 overflow-hidden flex flex-col p-2"
+                        style={{
+                          backgroundColor: statusColor,
+                          borderColor: 'rgba(0,0,0,0.2)',
+                          color: isLight ? '#000' : '#FFF',
+                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
+                        }}
+                      >
+                        <div className="font-black truncate uppercase leading-tight text-[9px] mb-0.5">
+                          {appt.paciente?.apellido} {appt.paciente?.nombre}
                         </div>
-                      )}
+                        <div className="text-[8px] font-bold opacity-90 leading-none">
+                          {appt.hora_inicio.substring(0, 5)} - {appt.hora_fin.substring(0, 5)}
+                        </div>
+                        {appt.height > 40 && (
+                          <div className="text-[7px] opacity-80 truncate mt-0.5 font-medium">
+                            {!splitByProfessional && `${getInitials(appt.profesional)} - `} {appt.servicio?.nombre}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )
+                  )
+                })
               })}
             </div>
           </div>
@@ -490,14 +566,20 @@ export const CalendarView: React.FC = () => {
               </div>
               {weekDays.map((day, i) => {
                 const isToday = day.toDateString() === new Date().toDateString()
+                const holiday = getHolidayForDate(day)
                 return (
-                  <div key={i} className={`p-2 text-center border-r-2 border-gray-300 last:border-r-0 ${isToday ? 'bg-blue-100/50' : i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
-                    <div className={`text-[10px] font-black uppercase tracking-widest ${isToday ? 'text-blue-600' : 'text-gray-500'}`}>
+                  <div key={i} className={`p-2 text-center border-r-2 border-gray-300 last:border-r-0 ${holiday ? 'bg-red-50' : isToday ? 'bg-blue-100/50' : i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                    <div className={`text-[10px] font-black uppercase tracking-widest ${holiday ? 'text-red-600' : isToday ? 'text-blue-600' : 'text-gray-500'}`}>
                       {day.toLocaleDateString('es-ES', { weekday: 'short' })}
                     </div>
-                    <div className={`text-sm font-black ${isToday ? 'text-[#026498]' : 'text-gray-900'}`}>
+                    <div className={`text-sm font-black ${holiday ? 'text-red-700' : isToday ? 'text-[#026498]' : 'text-gray-900'}`}>
                       {day.getDate()}/{day.getMonth() + 1}
                     </div>
+                    {holiday && (
+                      <div className="text-[8px] font-bold text-red-600 truncate px-1" title={holiday.descripcion}>
+                        🚩 {holiday.descripcion || 'Feriado'}
+                      </div>
+                    )}
                   </div>
                 )
               })}
@@ -611,20 +693,27 @@ export const CalendarView: React.FC = () => {
           {days.map((day, index) => {
             const dayAppointments = getAppointmentsForDate(day.date)
             const isToday = day.date.toDateString() === new Date().toDateString()
+            const holiday = getHolidayForDate(day.date)
 
             return (
               <div
                 key={index}
-                className={`bg-white min-h-[120px] p-2 ${!day.isCurrentMonth ? 'opacity-50' : ''
-                  }`}
+                className={`min-h-[120px] p-2 ${!day.isCurrentMonth ? 'opacity-50' : ''} ${holiday ? 'bg-red-50' : 'bg-white'}`}
               >
-                <div className={`text-sm font-medium mb-2 ${isToday
-                  ? `text-[${dentalColors.primary}] font-bold`
-                  : day.isCurrentMonth
-                    ? `text-[${dentalColors.gray900}]`
-                    : `text-[${dentalColors.gray400}]`
-                  }`}>
-                  {day.date.getDate()}
+                <div className="flex items-center gap-1 mb-2">
+                  <div className={`text-sm font-medium ${isToday
+                    ? `text-[${dentalColors.primary}] font-bold`
+                    : day.isCurrentMonth
+                      ? `text-[${dentalColors.gray900}]`
+                      : `text-[${dentalColors.gray400}]`
+                    }`}>
+                    {day.date.getDate()}
+                  </div>
+                  {holiday && (
+                    <span className="text-[8px] font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded-full truncate max-w-[90px]" title={holiday.descripcion}>
+                      🚩 {holiday.descripcion || 'Feriado'}
+                    </span>
+                  )}
                 </div>
 
                 <div className="space-y-1">
@@ -744,6 +833,16 @@ export const CalendarView: React.FC = () => {
               </select>
 
               <div className="flex items-center bg-white border rounded-lg h-8 px-1">
+                <button
+                  onClick={() => setSplitByProfessional(!splitByProfessional)}
+                  className={`px-2 py-1 rounded text-[9px] font-bold uppercase transition-colors ${splitByProfessional ? 'bg-[#026498] text-white' : 'hover:bg-gray-100 text-gray-500'}`}
+                  title="Dividir por profesional"
+                >
+                  Dividir
+                </button>
+              </div>
+
+              <div className="flex items-center bg-white border rounded-lg h-8 px-1">
                 <button onClick={() => navigate('prev')} className="p-1 hover:bg-gray-100 rounded">
                   <ChevronLeft className="h-3 w-3" />
                 </button>
@@ -810,7 +909,7 @@ export const CalendarView: React.FC = () => {
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap gap-x-4 gap-y-2 items-center bg-white/50 p-2 rounded-lg border border-gray-200">
               <span className="text-[10px] font-bold capitalize text-gray-400 border-r pr-3">Legenda</span>
-              {Object.entries(STATUS_COLORS).slice(0, 8).map(([status, color]) => (
+              {LEGEND_ENTRIES.map(([status, color]) => (
                 <div key={status} className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: color }} />
                   <span className="text-[10px] text-gray-600 font-bold capitalize">{status}</span>
@@ -828,130 +927,161 @@ export const CalendarView: React.FC = () => {
       </div>
 
       {selectedAppointment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
-            <div className={`px-6 py-4 border-b border-[${dentalColors.gray200}]`}>
-              <h3 className={`text-lg font-semibold text-[${dentalColors.gray900}]`}>
-                Detalles del Turno
-              </h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2rem] shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100 flex flex-col">
+            <div className={`px-8 py-6 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white`}>
+              <div>
+                <h3 className="text-xl font-black text-gray-900 tracking-tight">Detalles del Turno</h3>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-0.5">Gestión de Paciente</p>
+              </div>
+              <button 
+                onClick={() => setSelectedAppointment(null)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
             </div>
 
-            <div className="p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className={`text-sm font-medium text-[${dentalColors.gray600}]`}>Estado</span>
-                <span
-                  className="px-2 py-1 text-xs font-semibold rounded-full"
-                  style={{
-                    backgroundColor: `${getStatusColor(selectedAppointment.estado)}20`,
-                    color: getStatusColor(selectedAppointment.estado)
+            <div className="p-8 space-y-8 overflow-y-auto max-h-[70vh]">
+              {/* Patient Header */}
+              <div className="flex items-start gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center border-2 border-blue-100 shadow-inner">
+                  <span className="text-2xl font-black text-[#026498] uppercase">
+                    {selectedAppointment.paciente?.nombre?.[0]}{selectedAppointment.paciente?.apellido?.[0]}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-2xl font-black text-gray-900 leading-tight">
+                    {selectedAppointment.paciente?.apellido}, {selectedAppointment.paciente?.nombre}
+                  </h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                      {selectedAppointment.paciente?.tipo_documento}: {selectedAppointment.paciente?.numero_documento}
+                    </span>
+                    <span
+                      className="px-2 py-0.5 text-[10px] font-black rounded-full uppercase tracking-wider shadow-sm"
+                      style={{
+                        backgroundColor: `${getStatusColor(selectedAppointment.estado)}20`,
+                        color: getStatusColor(selectedAppointment.estado),
+                        border: `1px solid ${getStatusColor(selectedAppointment.estado)}40`
+                      }}
+                    >
+                      {selectedAppointment.estado}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Info Bento */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Phone className="h-3 w-3 text-[#026498]" />
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teléfono</span>
+                  </div>
+                  <p className="text-sm font-bold text-gray-900">{selectedAppointment.paciente?.telefono || 'No registrado'}</p>
+                </div>
+                <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Mail className="h-3 w-3 text-[#026498]" />
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">E-mail</span>
+                  </div>
+                  <p className="text-sm font-bold text-gray-900 truncate">{selectedAppointment.paciente?.email || 'No registrado'}</p>
+                </div>
+              </div>
+
+              {/* Appointment Details */}
+              <div className="space-y-5 bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#026498]" />
+                
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-blue-50 rounded-xl">
+                    <CalendarIcon className="h-5 w-5 text-[#026498]" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha y Hora</p>
+                    <p className="font-bold text-gray-900">
+                      {new Date(selectedAppointment.fecha + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+                      <span className="text-[#026498] ml-2">{selectedAppointment.hora_inicio.substring(0, 5)} - {selectedAppointment.hora_fin.substring(0, 5)} hs</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-purple-50 rounded-xl">
+                    <User className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Profesional</p>
+                    <p className="font-bold text-gray-900">
+                      {selectedAppointment.profesional?.nombre} {selectedAppointment.profesional?.apellido}
+                      <span className="text-purple-600 text-xs ml-2 font-medium">({selectedAppointment.profesional?.especialidad})</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-emerald-50 rounded-xl">
+                    <Heart className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Servicio</p>
+                    <p className="font-bold text-gray-900">{selectedAppointment.servicio?.nombre}</p>
+                  </div>
+                </div>
+              </div>
+
+              {selectedAppointment.observaciones && (
+                <div className="bg-amber-50/50 p-6 rounded-[2rem] border border-amber-100 shadow-sm">
+                  <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                    <FileText className="h-3 w-3" /> Observaciones
+                  </p>
+                  <p className="text-sm font-medium text-amber-900 italic">"{selectedAppointment.observaciones}"</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-8 bg-gray-50 border-t border-gray-100 flex flex-wrap gap-3">
+              <Button
+                variant="outline"
+                className="flex-1 min-w-[120px] rounded-2xl h-12 border-2 border-gray-200 font-black text-xs uppercase tracking-widest hover:bg-white hover:border-[#026498] hover:text-[#026498] transition-all"
+                onClick={() => {
+                  setShowEditModal(true)
+                }}
+              >
+                <EditIcon className="h-4 w-4 mr-2" />
+                Editar Turno
+              </Button>
+              
+              <Button
+                className="flex-1 min-w-[120px] rounded-2xl h-12 bg-[#026498] shadow-lg shadow-blue-900/20 font-black text-xs uppercase tracking-widest hover:bg-[#0c4a6e] transition-all"
+                onClick={() => {
+                  if (onNavigateToPatient && selectedAppointment.paciente?.id) {
+                    onNavigateToPatient(selectedAppointment.paciente.id)
+                  }
+                }}
+              >
+                <User className="h-4 w-4 mr-2" />
+                Ficha Paciente
+              </Button>
+
+              {['Confirmado', 'Confirmado por Whatsapp', 'En sala de espera'].includes(selectedAppointment.estado) && (
+                <Button
+                  className="w-full rounded-2xl h-12 bg-pink-600 shadow-lg shadow-pink-900/20 font-black text-xs uppercase tracking-widest hover:bg-pink-700 transition-all text-white"
+                  onClick={async () => {
+                    try {
+                      await turnosApi.actualizar(selectedAppointment.id, { estado: 'Atendiéndose' })
+                      fetchAppointments()
+                      setSelectedAppointment(null)
+                    } catch (error) {
+                      alert('Error al iniciar atención')
+                    }
                   }}
                 >
-                  {selectedAppointment.estado}
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <CalendarIcon className={`h-4 w-4 text-[${dentalColors.gray400}] mr-3`} />
-                  <div>
-                    <p className={`font-medium text-[${dentalColors.gray900}]`}>
-                      {new Date(selectedAppointment.fecha + 'T00:00:00').toLocaleDateString('es-ES', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </p>
-                    <p className={`text-sm text-[${dentalColors.gray600}]`}>
-                      {selectedAppointment.hora_inicio} - {selectedAppointment.hora_fin}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <User className={`h-4 w-4 text-[${dentalColors.gray400}] mr-3`} />
-                  <div>
-                    <p className={`font-medium text-[${dentalColors.gray900}]`}>
-                      {selectedAppointment.paciente?.nombre} {selectedAppointment.paciente?.apellido}
-                    </p>
-                    <div className="flex items-center space-x-4 mt-1">
-                      {selectedAppointment.paciente?.telefono && (
-                        <div className={`flex items-center text-sm text-[${dentalColors.gray600}]`}>
-                          <Phone className="h-3 w-3 mr-1" />
-                          {selectedAppointment.paciente.telefono}
-                        </div>
-                      )}
-                      {selectedAppointment.paciente?.email && (
-                        <div className={`flex items-center text-sm text-[${dentalColors.gray600}]`}>
-                          <Mail className="h-3 w-3 mr-1" />
-                          {selectedAppointment.paciente.email}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <User className={`h-4 w-4 text-[${dentalColors.gray400}] mr-3`} />
-                  <div>
-                    <p className={`font-medium text-[${dentalColors.gray900}]`}>
-                      {selectedAppointment.profesional?.nombre} {selectedAppointment.profesional?.apellido}
-                    </p>
-                    <p className={`text-sm text-[${dentalColors.gray600}]`}>
-                      {selectedAppointment.profesional?.especialidad}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <Briefcase className={`h-4 w-4 text-[${dentalColors.gray400}] mr-3`} />
-                  <div>
-                    <p className={`font-medium text-[${dentalColors.gray900}]`}>
-                      {selectedAppointment.servicio?.nombre}
-                    </p>
-                    <div className={`flex items-center text-sm text-[${dentalColors.primary}] font-semibold mt-1`}>
-                      ${selectedAppointment.servicio?.precio_base}
-                    </div>
-                  </div>
-                </div>
-
-                {selectedAppointment.observaciones && (
-                  <div>
-                    <p className={`text-sm font-medium text-[${dentalColors.gray700}] mb-1`}>
-                      Notas:
-                    </p>
-                    <p className={`text-sm text-[${dentalColors.gray600}] bg-[${dentalColors.gray50}] p-2 rounded`}>
-                      {selectedAppointment.observaciones}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteAppointment(selectedAppointment.id)}>
-                  Eliminar
+                  <Clock className="h-4 w-4 mr-2" />
+                  Iniciar Atención
                 </Button>
-                <div className="flex-1" />
-                
-                {selectedAppointment.estado === 'Pendiente' && (
-                  <Button 
-                    className="bg-green-600 hover:bg-green-700 text-white font-bold"
-                    onClick={() => {
-                      handleQuickConfirm(selectedAppointment.id)
-                      setSelectedAppointment(null)
-                    }}
-                  >
-                    Confirmar Pago
-                  </Button>
-                )}
-
-                <Button variant="outline" onClick={() => setSelectedAppointment(null)}>
-                  Cerrar
-                </Button>
-                <Button onClick={() => setShowEditModal(true)}>
-                  Editar Turno
-                </Button>
-              </div>
+              )}
             </div>
           </div>
         </div>

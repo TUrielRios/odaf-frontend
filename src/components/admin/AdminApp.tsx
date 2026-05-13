@@ -16,15 +16,21 @@ import { AusenciasManager } from './AusenciasManager'
 
 export const AdminApp: React.FC = () => {
   const [currentView, setCurrentView] = useState('dashboard')
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null)
+
+  const handleNavigateToPatient = (id: string) => {
+    setSelectedPatientId(id)
+    setCurrentView('patients')
+  }
 
   const renderCurrentView = () => {
     switch (currentView) {
       case 'dashboard':
         return <Dashboard onNavigateToCalendar={() => setCurrentView('calendar')} />
       case 'calendar':
-        return <CalendarView />
+        return <CalendarView onNavigateToPatient={handleNavigateToPatient} />
       case 'patients':
-        return <PatientsView />
+        return <PatientsView initialPatientId={selectedPatientId} onClearPatient={() => setSelectedPatientId(null)} />
       case 'professionals':
         return <ProfessionalsManager />
       case 'services':
@@ -56,7 +62,10 @@ export const AdminApp: React.FC = () => {
   }
 
   return (
-    <AdminLayout currentView={currentView} onViewChange={setCurrentView}>
+    <AdminLayout currentView={currentView} onViewChange={(view) => {
+      setCurrentView(view)
+      if (view !== 'patients') setSelectedPatientId(null)
+    }}>
       {renderCurrentView()}
     </AdminLayout>
   )

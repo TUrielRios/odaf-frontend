@@ -96,18 +96,33 @@ export const AdminBookingModal: React.FC<AdminBookingModalProps> = ({ onClose, o
     try {
       setLoading(true)
       let pacienteId: string
-      const existingPatient = await pacientesApi.buscarPorDocumento(data.numero_documento)
+
+      // Try to find existing patient by DNI
+      let existingPatient = null
+      try {
+        existingPatient = await pacientesApi.buscarPorDocumento(data.numero_documento)
+      } catch (e) {
+        // Patient not found - this is expected for new patients
+        existingPatient = null
+      }
       
       if (existingPatient) {
         pacienteId = existingPatient.id
       } else {
-        const newPatient = await pacientesApi.crear(data)
+        // Create new patient - ensure required fields have defaults
+        const patientData = {
+          ...data,
+          condicion: data.condicion || 'Activo',
+          tipo_facturacion: data.tipo_facturacion || 'B',
+        }
+        const newPatient = await pacientesApi.crear(patientData)
         pacienteId = newPatient.id
       }
       await createTurno(pacienteId)
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error handling patient:", error)
-      alert("Error al procesar los datos del paciente.")
+      const msg = error?.response?.data?.error || error?.response?.data?.errors?.[0]?.msg || error?.message || "Error al procesar los datos del paciente."
+      alert(msg)
       setLoading(false)
     }
   }
