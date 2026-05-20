@@ -26,35 +26,40 @@ interface AdminLayoutProps {
   children: React.ReactNode
   currentView: string
   onViewChange: (view: string) => void
+  userRole: string
+  onLogout: () => void
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({
   children,
   currentView,
-  onViewChange
+  onViewChange,
+  userRole,
+  onLogout
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
 
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'calendar', label: 'Calendario', icon: Calendar },
-    { id: 'patients', label: 'Pacientes', icon: UserCog },
-    { id: 'professionals', label: 'Profesionales', icon: Users },
-    { id: 'services', label: 'Servicios', icon: Briefcase },
-    { id: 'liquidaciones', label: 'Liquidaciones', icon: DollarSign },
-    { id: 'debtors', label: 'Reporte de deudores', icon: FileText },
-    { id: 'cashflow', label: 'Flujo de caja', icon: Wallet },
-    { id: 'feriados', label: 'Feriados', icon: Calendar },
-    { id: 'ausencias', label: 'Ausencias/Vacaciones', icon: CalendarOff },
-    { id: 'obras-sociales', label: 'Obras Sociales', icon: Shield },
-    { id: 'recordatorios', label: 'Recordatorios', icon: Bell },
-    { id: 'settings', label: 'Configuración', icon: Settings },
+  const allMenuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: Home, adminOnly: false },
+    { id: 'calendar', label: 'Calendario', icon: Calendar, adminOnly: false },
+    { id: 'patients', label: 'Pacientes', icon: UserCog, adminOnly: false },
+    { id: 'professionals', label: 'Profesionales', icon: Users, adminOnly: false },
+    { id: 'services', label: 'Servicios', icon: Briefcase, adminOnly: false },
+    { id: 'liquidaciones', label: 'Liquidaciones', icon: DollarSign, adminOnly: true },
+    { id: 'debtors', label: 'Reporte de deudores', icon: FileText, adminOnly: true },
+    { id: 'cashflow', label: 'Flujo de caja', icon: Wallet, adminOnly: true },
+    { id: 'feriados', label: 'Feriados', icon: Calendar, adminOnly: false },
+    { id: 'ausencias', label: 'Ausencias/Vacaciones', icon: CalendarOff, adminOnly: false },
+    { id: 'obras-sociales', label: 'Obras Sociales', icon: Shield, adminOnly: false },
+    { id: 'recordatorios', label: 'Recordatorios', icon: Bell, adminOnly: false },
+    { id: 'settings', label: 'Configuración', icon: Settings, adminOnly: false },
   ]
 
+  const menuItems = allMenuItems.filter(item => !item.adminOnly || userRole === 'admin')
+
   const handleLogout = () => {
-    // Implementar logout
-    console.log('Logout')
+    onLogout()
   }
 
   return (

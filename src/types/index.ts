@@ -132,6 +132,7 @@ export interface CrearProfesionalData {
   estado?: string
   observaciones?: string
   foto_url?: string
+  porcentaje_comision?: number
 }
 
 export interface HorarioAtencion {

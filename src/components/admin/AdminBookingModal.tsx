@@ -79,7 +79,7 @@ export const AdminBookingModal: React.FC<AdminBookingModalProps> = ({ onClose, o
         fecha: selectedDateTime.split('T')[0],
         hora_inicio: horaInicio,
         hora_fin: horaFin,
-        estado: "Confirmado por SMS",
+        estado: "Creado",
         pago_confirmado: false,
       })
 

@@ -26,7 +26,7 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
         fecha: initialData?.fecha || new Date().toISOString().split('T')[0],
         hora_inicio: initialData?.hora_inicio || '10:00',
         hora_fin: initialData?.hora_fin || '10:30',
-        estado: 'Pendiente',
+        estado: 'Creado',
         observaciones: '',
         sobre_turno: initialData?.sobre_turno || false
     })
