@@ -13,6 +13,7 @@ import DebtorsReport from './DebtorsReport'
 import CashFlow from './CashFlow'
 import { FeriadosManager } from './FeriadosManager'
 import { AusenciasManager } from './AusenciasManager'
+import { PermisosTabsManager } from './PermisosTabsManager'
 import { authApi } from '../../api/auth'
 import { apiClient } from '../../lib/api-client'
 import type { AuthUser } from '../../types'
@@ -163,7 +164,7 @@ export const AdminApp: React.FC = () => {
       case 'recordatorios':
         return <RemindersView />
       case 'settings':
-        return (
+        return user.role === 'admin' ? <PermisosTabsManager /> : (
           <div className="text-center py-12">
             <h3 className="text-lg font-medium text-gray-900 mb-2">Configuración</h3>
             <p className="text-gray-600">Panel de configuración en desarrollo</p>
@@ -182,6 +183,7 @@ export const AdminApp: React.FC = () => {
         if (view !== 'patients') setSelectedPatientId(null)
       }}
       userRole={user.role || 'profesional'}
+      permisosTabs={user.permisos_tabs}
       onLogout={handleLogout}
     >
       {renderCurrentView()}

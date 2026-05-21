@@ -71,8 +71,8 @@ const TRATAMIENTOS = [
 type EstadoTipo = "buen_estado" | "mal_estado"
 
 const ESTADO_COLORS: Record<EstadoTipo, string> = {
-  buen_estado: "#2563EB",  // Blue
-  mal_estado: "#DC2626",   // Red
+  buen_estado: "#DC2626",  // Red
+  mal_estado: "#2563EB",   // Blue
 }
 
 export const OdontogramSection: React.FC<OdontogramSectionProps> = ({ pacienteId }) => {
@@ -664,8 +664,8 @@ const DienteVisual: React.FC<DienteVisualProps> = ({
   const getSuperficieBorder = (superficie: string): string => {
     const estado = datos?.superficies?.[superficie as keyof typeof datos.superficies]
     if (!estado || estado === "sano") return "#D1D5DB"
-    if (estado === "buen_estado") return "#1D4ED8"
-    if (estado === "mal_estado") return "#B91C1C"
+    if (estado === "buen_estado") return "#B91C1C"
+    if (estado === "mal_estado") return "#1D4ED8"
     return "#6B7280"
   }
 
@@ -797,6 +797,13 @@ const DienteVisual: React.FC<DienteVisualProps> = ({
           )}
           {tratamientoGral === "tratamiento_endodontico" && (
             <div className="w-1 h-12 rounded-full" style={{ backgroundColor: color }} />
+          )}
+          {tratamientoGral === "supernumerario" && (
+            <svg viewBox="0 0 48 64" className="w-8 h-10 absolute -right-2 -top-1" style={{ opacity: 0.85 }}>
+              <path d="M 18 10 L 24 4 L 30 10 Z" fill={color} stroke={color} strokeWidth="1" />
+              <rect x="16" y="10" width="16" height="20" rx="3" fill={color} stroke={color} strokeWidth="1" />
+              <text x="24" y="24" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">S</text>
+            </svg>
           )}
         </div>
       </div>

@@ -1,6 +1,16 @@
 import { apiClient } from "../lib/api-client"
 import type { AuthResponse, AuthUser, LoginData, RegisterData, ApiResponse } from "../types"
 
+export interface UsuarioAdmin {
+  id: number
+  email: string
+  nombre: string
+  role: string
+  profesional_id: number | null
+  activo: boolean
+  permisos_tabs: string[] | null
+}
+
 export const authApi = {
   async login(data: LoginData): Promise<AuthResponse> {
     const response = await apiClient.post<ApiResponse<AuthResponse>>("/auth/login", data)
@@ -35,5 +45,15 @@ export const authApi = {
 
   logout() {
     apiClient.clearToken()
+  },
+
+  async listarUsuarios(): Promise<UsuarioAdmin[]> {
+    const response = await apiClient.get<{ data: UsuarioAdmin[] }>("/auth/usuarios")
+    return response.data
+  },
+
+  async actualizarPermisosTabs(userId: number, permisos_tabs: string[] | null): Promise<UsuarioAdmin> {
+    const response = await apiClient.put<{ data: UsuarioAdmin }>(`/auth/usuarios/${userId}/permisos-tabs`, { permisos_tabs })
+    return response.data
   },
 }

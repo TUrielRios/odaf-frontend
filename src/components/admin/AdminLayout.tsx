@@ -27,6 +27,7 @@ interface AdminLayoutProps {
   currentView: string
   onViewChange: (view: string) => void
   userRole: string
+  permisosTabs?: string[] | null
   onLogout: () => void
 }
 
@@ -35,6 +36,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   currentView,
   onViewChange,
   userRole,
+  permisosTabs,
   onLogout
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -56,7 +58,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
     { id: 'settings', label: 'Configuración', icon: Settings, adminOnly: false },
   ]
 
-  const menuItems = allMenuItems.filter(item => !item.adminOnly || userRole === 'admin')
+  const menuItems = allMenuItems.filter(item => {
+    if (item.adminOnly && userRole !== 'admin') return false
+    if (userRole === 'admin') return true
+    if (permisosTabs && permisosTabs.length > 0) return permisosTabs.includes(item.id)
+    return !item.adminOnly
+  })
 
   const handleLogout = () => {
     onLogout()

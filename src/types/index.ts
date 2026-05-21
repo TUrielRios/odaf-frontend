@@ -20,6 +20,7 @@ export interface AuthUser {
   email: string
   nombre: string
   role?: string
+  permisos_tabs?: string[] | null
 }
 
 export interface AuthResponse {

@@ -304,7 +304,6 @@ export const ProfessionalsManager: React.FC = () => {
                   <th className="text-left py-3 px-4 font-semibold text-foreground">Contacto</th>
                   <th className="text-left py-3 px-4 font-semibold text-foreground">Especialidad</th>
                   <th className="text-left py-3 px-4 font-semibold text-foreground">Matrícula</th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">Comisión</th>
                   <th className="text-left py-3 px-4 font-semibold text-foreground">Estado</th>
                   <th className="text-left py-3 px-4 font-semibold text-foreground">Acciones</th>
                 </tr>
@@ -357,9 +356,6 @@ export const ProfessionalsManager: React.FC = () => {
                     </td>
                     <td className="py-4 px-4">
                       <span className="text-sm font-mono text-foreground">{professional.numero_matricula}</span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-sm font-semibold text-foreground">{professional.porcentaje_comision ?? 50}%</span>
                     </td>
                     <td className="py-4 px-4">
                       <span
@@ -501,34 +497,17 @@ export const ProfessionalsManager: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Color Identificativo</label>
-                  <div className="flex items-center space-x-3">
-                    <Input
-                      type="color"
-                      value={formData.color || "#026498"}
-                      onChange={(e) => handleChange("color", e.target.value)}
-                      className="w-16 h-10 p-1 cursor-pointer"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      Color en el calendario.
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Porcentaje de Comisión (%)</label>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Color Identificativo</label>
+                <div className="flex items-center space-x-3">
                   <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.5"
-                    value={formData.porcentaje_comision ?? 50}
-                    onChange={(e) => setFormData(prev => ({ ...prev, porcentaje_comision: Number(e.target.value) }))}
-                    placeholder="50"
+                    type="color"
+                    value={formData.color || "#026498"}
+                    onChange={(e) => handleChange("color", e.target.value)}
+                    className="w-16 h-10 p-1 cursor-pointer"
                   />
-                  <span className="text-xs text-muted-foreground mt-1 block">
-                    Porcentaje que recibe el profesional en las liquidaciones.
+                  <span className="text-sm text-muted-foreground">
+                    Color en el calendario.
                   </span>
                 </div>
               </div>
