@@ -22,8 +22,8 @@ import {
   Trash2,
   Shield,
 } from 'lucide-react'
-import { turnosApi } from '../../api'
-import type { Turno, Profesional } from '../../types'
+import { turnosApi, pacientesApi } from '../../api'
+import type { Turno, Profesional, Paciente } from '../../types'
 import { EditAppointmentModal } from './EditAppointmentModal'
 import { AdminAppointmentModal } from './AdminAppointmentModal'
 import { AdminBookingModal } from './AdminBookingModal'
@@ -78,8 +78,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [viewType, setViewType] = useState<ViewType>('month')
   const [patientSearch, setPatientSearch] = useState('')
-  const [searchResults, setSearchResults] = useState<Turno[]>([])
+  const [searchResults, setSearchResults] = useState<Paciente[]>([])
   const [showSearchResults, setShowSearchResults] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const [newAppointmentData, setNewAppointmentData] = useState<{ fecha: string, hora_inicio: string, sobre_turno: boolean } | null>(null)
   const [draggingAppointment, setDraggingAppointment] = useState<Turno | null>(null)
   const [feriados, setFeriados] = useState<Feriado[]>([])
@@ -97,28 +99,37 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
     fetchFeriados()
   }, [currentDate, viewType])
 
-  // Patient search
+  // Patient search - server-side
   useEffect(() => {
     if (patientSearch.trim().length < 2) {
       setSearchResults([])
       setShowSearchResults(false)
       return
     }
-    const term = patientSearch.toLowerCase()
-    const results = appointments.filter((t) => {
-      const name = `${t.paciente?.apellido || ''} ${t.paciente?.nombre || ''}`.toLowerCase()
-      const dni = t.paciente?.numero_documento || ''
-      return name.includes(term) || dni.includes(term)
-    })
-    // Sort by date ascending
-    results.sort((a, b) => {
-      const d = a.fecha.localeCompare(b.fecha)
-      if (d !== 0) return d
-      return a.hora_inicio.localeCompare(b.hora_inicio)
-    })
-    setSearchResults(results)
-    setShowSearchResults(true)
-  }, [patientSearch, appointments])
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        setSearchLoading(true)
+        const response = await pacientesApi.listar({ search: patientSearch.trim(), limit: 15 })
+        setSearchResults(response.data)
+        setShowSearchResults(true)
+      } catch (error) {
+        console.error('Error searching patients:', error)
+      } finally {
+        setSearchLoading(false)
+      }
+    }, 300)
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [patientSearch])
 
   const fetchProfessionals = async () => {
     try {
@@ -880,33 +891,46 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
               {showSearchResults && searchResults.length > 0 && (
                 <div className="absolute top-full left-0 mt-1 w-full sm:w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] max-h-60 overflow-y-auto overflow-x-hidden no-scrollbar">
                   <div className="p-1">
-                    {searchResults.map((turno) => (
+                    {searchResults.map((paciente) => (
                       <div
-                        key={turno.id}
-                        onClick={() => {
-                          setCurrentDate(new Date(turno.fecha + 'T12:00:00')) // Avoid midnight timezone issues
-                          setViewType('day')
+                        key={paciente.id}
+                        onClick={async () => {
+                          try {
+                            const today = new Date().toISOString().split('T')[0]
+                            const response = await turnosApi.listar({ paciente_id: paciente.id, fecha_desde: today, limit: 1 })
+                            if (response.data.length > 0) {
+                              const turno = response.data[0]
+                              setCurrentDate(new Date(turno.fecha + 'T12:00:00'))
+                              setViewType('day')
+                              setSelectedAppointment(turno)
+                            } else if (onNavigateToPatient) {
+                              onNavigateToPatient(paciente.id)
+                            }
+                          } catch {
+                            if (onNavigateToPatient) {
+                              onNavigateToPatient(paciente.id)
+                            }
+                          }
                           setPatientSearch('')
                           setShowSearchResults(false)
-                          setSelectedAppointment(turno)
                         }}
                         className="p-2 hover:bg-blue-50 rounded-md cursor-pointer transition-colors border-b last:border-0"
                       >
                         <div className="text-[10px] font-black text-gray-900 uppercase">
-                          {turno.paciente?.apellido} {turno.paciente?.nombre}
+                          {paciente.apellido} {paciente.nombre}
                         </div>
                         <div className="flex justify-between text-[9px] text-gray-500 font-bold">
-                          <span>{new Date(turno.fecha + 'T12:00:00').toLocaleDateString('es-ES')}</span>
-                          <span>{turno.hora_inicio.substring(0, 5)} hs</span>
+                          <span>{paciente.numero_documento}</span>
+                          <span className="text-blue-500">{paciente.telefono || paciente.email || ''}</span>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-              {showSearchResults && searchResults.length === 0 && patientSearch.trim().length >= 2 && (
+              {showSearchResults && searchResults.length === 0 && patientSearch.trim().length >= 2 && !searchLoading && (
                 <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-[100] p-3 text-center">
-                  <p className="text-[10px] font-bold text-gray-400 italic">No se encontraron turnos</p>
+                  <p className="text-[10px] font-bold text-gray-400 italic">No se encontraron pacientes</p>
                 </div>
               )}
             </div>

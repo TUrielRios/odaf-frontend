@@ -21,7 +21,9 @@ export const FilesSection: React.FC<FilesSectionProps> = ({ pacienteId }) => {
   const [descripcion, setDescripcion] = useState("")
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewFile, setPreviewFile] = useState<Archivo | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const dragCounterRef = useRef(0)
 
   useEffect(() => {
     fetchArchivos()
@@ -41,6 +43,42 @@ export const FilesSection: React.FC<FilesSectionProps> = ({ pacienteId }) => {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+    if (file) {
+      setSelectedFile(file)
+      setShowUploadModal(true)
+    }
+  }
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounterRef.current++
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true)
+    }
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounterRef.current--
+    if (dragCounterRef.current === 0) {
+      setIsDragging(false)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    dragCounterRef.current = 0
+
+    const file = e.dataTransfer.files?.[0]
     if (file) {
       setSelectedFile(file)
       setShowUploadModal(true)
@@ -119,7 +157,23 @@ export const FilesSection: React.FC<FilesSectionProps> = ({ pacienteId }) => {
   }
 
   return (
-    <div className="space-y-4">
+    <div
+      className="space-y-4 relative"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {isDragging && (
+        <div className="absolute inset-0 z-50 bg-blue-50/90 border-2 border-dashed border-blue-400 rounded-xl flex items-center justify-center pointer-events-none">
+          <div className="text-center">
+            <Upload className="h-12 w-12 mx-auto mb-3 text-blue-500" />
+            <p className="text-lg font-semibold text-blue-700">Soltar archivo aquí</p>
+            <p className="text-sm text-blue-500">Se abrirá el formulario de carga</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold text-gray-900">Archivos</h3>
         <Button onClick={() => fileInputRef.current?.click()} size="sm">
@@ -136,12 +190,13 @@ export const FilesSection: React.FC<FilesSectionProps> = ({ pacienteId }) => {
       </div>
 
       {archivos.length === 0 ? (
-        <Card className="p-8 text-center text-gray-500">
-          <File className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-          <p>No hay archivos cargados</p>
-          <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="mt-4 bg-transparent">
-            Subir primer archivo
-          </Button>
+        <Card
+          className="p-8 text-center text-gray-500 border-2 border-dashed border-gray-200 cursor-pointer hover:border-blue-300 hover:bg-blue-50/30 transition-colors"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Upload className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+          <p className="font-medium">No hay archivos cargados</p>
+          <p className="text-sm mt-1">Arrastrá un archivo aquí o hacé clic para subir</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
