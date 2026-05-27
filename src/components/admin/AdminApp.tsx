@@ -6,6 +6,7 @@ import { ProfessionalsManager } from './ProfessionalsManager'
 import { ServicesManager } from './ServicesManager'
 import { PatientsView } from '../patients/PatientsView'
 import { ObrasSocialesManager } from './ObrasSocialesManager'
+import { ProcedimientosManager } from './ProcedimientosManager'
 import { RemindersView } from './RemindersView'
 
 import { LiquidacionesManager } from './LiquidacionesManager'
@@ -161,8 +162,11 @@ export const AdminApp: React.FC = () => {
         return <AusenciasManager />
       case 'obras-sociales':
         return <ObrasSocialesManager />
+      case 'procedimientos':
+        return <ProcedimientosManager />
       case 'recordatorios':
         return <RemindersView />
+
       case 'settings':
         return user.role === 'admin' ? <PermisosTabsManager /> : (
           <div className="text-center py-12">

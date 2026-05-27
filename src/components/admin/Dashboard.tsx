@@ -43,11 +43,17 @@ export const Dashboard: React.FC<{ onNavigateToCalendar?: () => void }> = ({ onN
   const [birthdaysToday, setBirthdaysToday] = useState<Paciente[]>([])
 
   const calculateAge = (dateStr: string) => {
-    const birth = new Date(dateStr + 'T12:00:00')
+    if (!dateStr) return 0
+    const parts = dateStr.split('-')
+    if (parts.length !== 3) return 0
+    const year = parseInt(parts[0], 10)
+    const month = parseInt(parts[1], 10)
+    const day = parseInt(parts[2], 10)
+
     const today = new Date()
-    let age = today.getFullYear() - birth.getFullYear()
-    const m = today.getMonth() - birth.getMonth()
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+    let age = today.getFullYear() - year
+    const m = (today.getMonth() + 1) - month
+    if (m < 0 || (m === 0 && today.getDate() < day)) {
       age--
     }
     return age
@@ -86,8 +92,11 @@ export const Dashboard: React.FC<{ onNavigateToCalendar?: () => void }> = ({ onN
 
         const birthdays = patients.filter(p => {
           if (!p.fecha_nacimiento) return false
-          const birth = new Date(p.fecha_nacimiento + 'T12:00:00')
-          return birth.getDate() === todayDay && (birth.getMonth() + 1) === todayMonth
+          const parts = p.fecha_nacimiento.split('-')
+          if (parts.length !== 3) return false
+          const birthMonth = parseInt(parts[1], 10)
+          const birthDay = parseInt(parts[2], 10)
+          return birthDay === todayDay && birthMonth === todayMonth
         })
         setBirthdaysToday(birthdays)
 

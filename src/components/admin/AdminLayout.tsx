@@ -54,7 +54,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
     { id: 'feriados', label: 'Feriados', icon: Calendar, adminOnly: false },
     { id: 'ausencias', label: 'Ausencias/Vacaciones', icon: CalendarOff, adminOnly: false },
     { id: 'obras-sociales', label: 'Obras Sociales', icon: Shield, adminOnly: false },
+    { id: 'procedimientos', label: 'Procedimientos', icon: FileText, adminOnly: false },
     { id: 'recordatorios', label: 'Recordatorios', icon: Bell, adminOnly: false },
+
     { id: 'settings', label: 'Configuración', icon: Settings, adminOnly: false },
   ]
 

@@ -542,3 +542,31 @@ export interface CrearPresupuestoData {
   observaciones?: string
 }
 
+export interface Procedimiento {
+  id: number
+  nombre: string
+  precio_ars: number
+  precio_usd: number
+  createdAt: string
+  updatedAt: string
+  preciosObraSocial?: ProcedimientoPrecioObraSocial[]
+}
+
+export interface ProcedimientoPrecioObraSocial {
+  id: number
+  procedimiento_id: number
+  obra_social_id: number
+  codigo?: string
+  precio_paciente?: number
+  usar_precio_particular: boolean
+  cobertura?: number
+  precio_sugerido?: number
+  createdAt: string
+  updatedAt: string
+  obraSocial?: {
+    id: number
+    nombre: string
+  }
+}
+
+

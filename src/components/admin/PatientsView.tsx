@@ -51,14 +51,28 @@ export const PatientsView: React.FC = () => {
   }
 
   const calculateAge = (birthDate: string): number => {
+    if (!birthDate) return 0
+    const parts = birthDate.split('-')
+    if (parts.length !== 3) return 0
+    const year = parseInt(parts[0], 10)
+    const month = parseInt(parts[1], 10)
+    const day = parseInt(parts[2], 10)
+
     const today = new Date()
-    const birth = new Date(birthDate)
-    let age = today.getFullYear() - birth.getFullYear()
-    const monthDiff = today.getMonth() - birth.getMonth()
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    let age = today.getFullYear() - year
+    const monthDiff = (today.getMonth() + 1) - month
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < day)) {
       age--
     }
     return age
+  }
+
+  const formatLocalDate = (dateStr: string) => {
+    if (!dateStr) return '-'
+    const parts = dateStr.split('-')
+    if (parts.length !== 3) return dateStr
+    const [year, month, day] = parts
+    return `${day}/${month}/${year}`
   }
 
   const handleCreatePatient = () => {
@@ -317,8 +331,7 @@ export const PatientsView: React.FC = () => {
                     <div>
                       <p className="text-xs text-gray-500">Fecha de Nacimiento</p>
                       <p className="font-medium">
-                        {new Date(selectedPatient.fecha_nacimiento).toLocaleDateString('es-ES')}
-                        ({calculateAge(selectedPatient.fecha_nacimiento)} años)
+                        {formatLocalDate(selectedPatient.fecha_nacimiento)} ({calculateAge(selectedPatient.fecha_nacimiento)} años)
                       </p>
                     </div>
                     <div>
