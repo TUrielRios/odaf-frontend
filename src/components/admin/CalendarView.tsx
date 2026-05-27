@@ -20,9 +20,10 @@ import {
   Edit as EditIcon,
   FileText,
   Trash2,
+  Shield,
 } from 'lucide-react'
-import { turnosApi } from '../../api'
-import type { Turno, Profesional } from '../../types'
+import { turnosApi, pacientesApi } from '../../api'
+import type { Turno, Profesional, Paciente } from '../../types'
 import { EditAppointmentModal } from './EditAppointmentModal'
 import { AdminAppointmentModal } from './AdminAppointmentModal'
 import { AdminBookingModal } from './AdminBookingModal'
@@ -77,8 +78,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [viewType, setViewType] = useState<ViewType>('month')
   const [patientSearch, setPatientSearch] = useState('')
-  const [searchResults, setSearchResults] = useState<Turno[]>([])
+  const [searchResults, setSearchResults] = useState<Paciente[]>([])
   const [showSearchResults, setShowSearchResults] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const [newAppointmentData, setNewAppointmentData] = useState<{ fecha: string, hora_inicio: string, sobre_turno: boolean } | null>(null)
   const [draggingAppointment, setDraggingAppointment] = useState<Turno | null>(null)
   const [feriados, setFeriados] = useState<Feriado[]>([])
@@ -96,28 +99,37 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
     fetchFeriados()
   }, [currentDate, viewType])
 
-  // Patient search
+  // Patient search - server-side
   useEffect(() => {
     if (patientSearch.trim().length < 2) {
       setSearchResults([])
       setShowSearchResults(false)
       return
     }
-    const term = patientSearch.toLowerCase()
-    const results = appointments.filter((t) => {
-      const name = `${t.paciente?.apellido || ''} ${t.paciente?.nombre || ''}`.toLowerCase()
-      const dni = t.paciente?.numero_documento || ''
-      return name.includes(term) || dni.includes(term)
-    })
-    // Sort by date ascending
-    results.sort((a, b) => {
-      const d = a.fecha.localeCompare(b.fecha)
-      if (d !== 0) return d
-      return a.hora_inicio.localeCompare(b.hora_inicio)
-    })
-    setSearchResults(results)
-    setShowSearchResults(true)
-  }, [patientSearch, appointments])
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        setSearchLoading(true)
+        const response = await pacientesApi.listar({ search: patientSearch.trim(), limit: 15 })
+        setSearchResults(response.data)
+        setShowSearchResults(true)
+      } catch (error) {
+        console.error('Error searching patients:', error)
+      } finally {
+        setSearchLoading(false)
+      }
+    }, 300)
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [patientSearch])
 
   const fetchProfessionals = async () => {
     try {
@@ -164,11 +176,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
         fecha_desde = start.toISOString().split('T')[0]
         fecha_hasta = end.toISOString().split('T')[0]
       } else if (viewType === 'week') {
-        // Fetch 2 weeks around the current week
+        // Fetch 2 weeks around the current week (Mon-Sat)
+        const dayOfWeek = currentDate.getDay()
+        const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
         const start = new Date(currentDate)
-        start.setDate(start.getDate() - start.getDay() - 7)
+        start.setDate(start.getDate() + diffToMon - 7)
         const end = new Date(currentDate)
-        end.setDate(end.getDate() - end.getDay() + 20)
+        end.setDate(end.getDate() + diffToMon + 19)
         fecha_desde = start.toISOString().split('T')[0]
         fecha_hasta = end.toISOString().split('T')[0]
       } else {
@@ -194,7 +208,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
     const firstDay = new Date(year, month, 1)
     const lastDay = new Date(year, month + 1, 0)
     const daysInMonth = lastDay.getDate()
-    const startingDayOfWeek = firstDay.getDay()
+    // Convert Sunday=0 to Monday-based (Mon=0, Tue=1, ..., Sun=6)
+    const startingDayOfWeek = (firstDay.getDay() + 6) % 7
 
     const days = []
 
@@ -218,9 +233,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
   const getWeekDays = (date: Date) => {
     const days = []
     const startOfWeek = new Date(date)
-    startOfWeek.setDate(date.getDate() - date.getDay())
+    const dayOfWeek = startOfWeek.getDay()
+    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+    startOfWeek.setDate(date.getDate() + diff)
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 6; i++) {
       const day = new Date(startOfWeek)
       day.setDate(startOfWeek.getDate() + i)
       days.push(day)
@@ -410,7 +427,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
     } else if (viewType === 'week') {
       const weekDays = getWeekDays(currentDate)
       const start = weekDays[0].toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
-      const end = weekDays[6].toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+      const end = weekDays[weekDays.length - 1].toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
       return `${start} - ${end}`
     } else {
       return currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
@@ -561,7 +578,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
         <div className="overflow-x-auto flex-1 flex flex-col border rounded-xl shadow-inner bg-gray-50/50">
           <div className="min-w-[1000px] flex-1 flex flex-col">
             {/* Header */}
-            <div className="grid grid-cols-[80px_repeat(7,1fr)] bg-gray-100 border-b-2 border-gray-300 sticky top-0 z-20">
+            <div className="grid grid-cols-[80px_repeat(6,1fr)] bg-gray-100 border-b-2 border-gray-300 sticky top-0 z-20">
               <div className="p-2 border-r-2 border-gray-300 flex items-center justify-center">
                 <Clock className="h-4 w-4 text-gray-500" />
               </div>
@@ -591,7 +608,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
               <div className="relative">
                 {/* Grid Rows */}
                 {TIME_SLOTS.map((slot) => (
-                  <div key={slot} className="grid grid-cols-[80px_repeat(7,1fr)] border-b border-gray-200 h-[40px]">
+                  <div key={slot} className="grid grid-cols-[80px_repeat(6,1fr)] border-b border-gray-200 h-[40px]">
                     <div className="p-1 text-[9px] font-bold text-gray-500 border-r-2 border-gray-300 text-center flex items-center justify-center bg-gray-100 font-mono">
                       {slot}
                     </div>
@@ -620,7 +637,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                 ))}
 
                 {/* Absolute Appointments for each day column */}
-                <div className="absolute top-0 left-[80px] right-0 bottom-0 pointer-events-none grid grid-cols-7">
+                <div className="absolute top-0 left-[80px] right-0 bottom-0 pointer-events-none grid grid-cols-6">
                   {weekDays.map((day, dayIdx) => (
                     <div key={dayIdx} className="relative h-full border-r-2 border-transparent">
                       {getAppointmentLayout(getAppointmentsForDate(day)).map((appt) => {
@@ -683,7 +700,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
     return (
       <Card>
         <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden">
-          {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map((day) => (
+          {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day) => (
             <div key={day} className={`bg-[${dentalColors.gray100}] p-3 text-center`}>
               <span className={`text-sm font-semibold text-[${dentalColors.gray700}]`}>
                 {day}
@@ -874,33 +891,46 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
               {showSearchResults && searchResults.length > 0 && (
                 <div className="absolute top-full left-0 mt-1 w-full sm:w-80 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] max-h-60 overflow-y-auto overflow-x-hidden no-scrollbar">
                   <div className="p-1">
-                    {searchResults.map((turno) => (
+                    {searchResults.map((paciente) => (
                       <div
-                        key={turno.id}
-                        onClick={() => {
-                          setCurrentDate(new Date(turno.fecha + 'T12:00:00')) // Avoid midnight timezone issues
-                          setViewType('day')
+                        key={paciente.id}
+                        onClick={async () => {
+                          try {
+                            const today = new Date().toISOString().split('T')[0]
+                            const response = await turnosApi.listar({ paciente_id: paciente.id, fecha_desde: today, limit: 1 })
+                            if (response.data.length > 0) {
+                              const turno = response.data[0]
+                              setCurrentDate(new Date(turno.fecha + 'T12:00:00'))
+                              setViewType('day')
+                              setSelectedAppointment(turno)
+                            } else if (onNavigateToPatient) {
+                              onNavigateToPatient(paciente.id)
+                            }
+                          } catch {
+                            if (onNavigateToPatient) {
+                              onNavigateToPatient(paciente.id)
+                            }
+                          }
                           setPatientSearch('')
                           setShowSearchResults(false)
-                          setSelectedAppointment(turno)
                         }}
                         className="p-2 hover:bg-blue-50 rounded-md cursor-pointer transition-colors border-b last:border-0"
                       >
                         <div className="text-[10px] font-black text-gray-900 uppercase">
-                          {turno.paciente?.apellido} {turno.paciente?.nombre}
+                          {paciente.apellido} {paciente.nombre}
                         </div>
                         <div className="flex justify-between text-[9px] text-gray-500 font-bold">
-                          <span>{new Date(turno.fecha + 'T12:00:00').toLocaleDateString('es-ES')}</span>
-                          <span>{turno.hora_inicio.substring(0, 5)} hs</span>
+                          <span>{paciente.numero_documento}</span>
+                          <span className="text-blue-500">{paciente.telefono || paciente.email || ''}</span>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-              {showSearchResults && searchResults.length === 0 && patientSearch.trim().length >= 2 && (
+              {showSearchResults && searchResults.length === 0 && patientSearch.trim().length >= 2 && !searchLoading && (
                 <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-[100] p-3 text-center">
-                  <p className="text-[10px] font-bold text-gray-400 italic">No se encontraron turnos</p>
+                  <p className="text-[10px] font-bold text-gray-400 italic">No se encontraron pacientes</p>
                 </div>
               )}
             </div>
@@ -972,6 +1002,19 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                   </div>
                 </div>
               </div>
+
+              {/* Obra Social - Quick View */}
+              {selectedAppointment.paciente?.obraSocial && (
+                <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-xl">
+                    <Shield className="h-4 w-4 text-[#026498]" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Obra Social</span>
+                    <p className="text-sm font-bold text-[#026498]">{selectedAppointment.paciente.obraSocial.nombre}</p>
+                  </div>
+                </div>
+              )}
 
               {/* Contact Info Bento */}
               <div className="grid grid-cols-2 gap-4">

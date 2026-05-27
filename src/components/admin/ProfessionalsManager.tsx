@@ -34,6 +34,7 @@ export const ProfessionalsManager: React.FC = () => {
     numero_matricula: "",
     color: "#026498",
     foto_url: "",
+    porcentaje_comision: 50,
   })
 
   const [errors, setErrors] = useState<Partial<Record<keyof CrearProfesionalData, string>>>({})
@@ -102,6 +103,7 @@ export const ProfessionalsManager: React.FC = () => {
       numero_matricula: professional.numero_matricula,
       color: professional.color || "#026498",
       foto_url: professional.foto_url || "",
+      porcentaje_comision: professional.porcentaje_comision ?? 50,
     })
     setShowForm(true)
   }
@@ -154,6 +156,7 @@ export const ProfessionalsManager: React.FC = () => {
       numero_matricula: "",
       color: "#026498",
       foto_url: "",
+      porcentaje_comision: 50,
     })
     setErrors({})
     setEditingProfessional(null)
@@ -504,7 +507,7 @@ export const ProfessionalsManager: React.FC = () => {
                     className="w-16 h-10 p-1 cursor-pointer"
                   />
                   <span className="text-sm text-muted-foreground">
-                    Este color se usará para identificar los turnos de este profesional en el calendario.
+                    Color en el calendario.
                   </span>
                 </div>
               </div>

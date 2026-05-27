@@ -20,6 +20,7 @@ export interface AuthUser {
   email: string
   nombre: string
   role?: string
+  permisos_tabs?: string[] | null
 }
 
 export interface AuthResponse {
@@ -133,6 +134,7 @@ export interface CrearProfesionalData {
   estado?: string
   observaciones?: string
   foto_url?: string
+  porcentaje_comision?: number
 }
 
 export interface HorarioAtencion {
