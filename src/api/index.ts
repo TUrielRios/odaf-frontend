@@ -14,6 +14,7 @@ export { obrasSocialesApi } from "./obras-sociales"
 export { copagosApi } from "./copagos"
 export { feriadosApi } from "./feriados"
 export { recordatoriosApi } from "./recordatorios"
+export { presupuestosApi } from "./presupuestos"
 
 // Re-exportar el cliente para uso directo si es necesario
 export { apiClient } from "../lib/api-client"

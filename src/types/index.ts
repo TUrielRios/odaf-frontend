@@ -70,6 +70,7 @@ export interface Paciente {
     id: number
     nombre: string
   }
+  presupuestos?: Presupuesto[]
 }
 
 export interface CrearPacienteData {
@@ -503,5 +504,39 @@ export interface MovimientoCuenta {
   descripcion?: string
   createdAt: string
   updatedAt: string
+}
+
+export interface PresupuestoItem {
+  descripcion: string
+  cantidad: number
+  precio_unitario: number
+  total: number
+}
+
+export interface Presupuesto {
+  id: number
+  paciente_id: string
+  profesional_id?: number
+  fecha: string
+  descripcion?: string
+  items: PresupuestoItem[]
+  monto_total: number | string
+  estado: string
+  observaciones?: string
+  createdAt: string
+  updatedAt: string
+  paciente?: Paciente
+  profesional?: Profesional
+}
+
+export interface CrearPresupuestoData {
+  paciente_id: string
+  profesional_id?: number
+  fecha: string
+  descripcion?: string
+  items: PresupuestoItem[]
+  monto_total: number
+  estado?: string
+  observaciones?: string
 }
 

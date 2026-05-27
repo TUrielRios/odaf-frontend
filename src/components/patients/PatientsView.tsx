@@ -34,8 +34,9 @@ import { FilesSection } from "./FilesSection"
 import { CuentaCorrienteSection } from "./CuentaCorrienteSection"
 import { RemindersSection } from "./RemindersSection"
 import { TurnosSection } from "./TurnosSection"
+import { PresupuestosSection } from "./PresupuestosSection"
 
-type TabType = "info" | "historia" | "odontograma" | "prescripciones" | "tratamientos" | "archivos" | "cuenta_corriente" | "recordatorios" | "turnos"
+type TabType = "info" | "historia" | "odontograma" | "prescripciones" | "tratamientos" | "archivos" | "cuenta_corriente" | "recordatorios" | "turnos" | "presupuestos"
 
 interface PatientsViewProps {
   initialPatientId?: string | null
@@ -55,13 +56,14 @@ export const PatientsView: React.FC<PatientsViewProps> = ({ initialPatientId, on
   const [activeTab, setActiveTab] = useState<TabType>("info")
   const [obrasSociales, setObrasSociales] = useState<ObraSocial[]>([])
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [selectedMonth, setSelectedMonth] = useState<string>("")
 
   const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api"
 
   useEffect(() => {
     fetchPatients()
     fetchObrasSociales()
-  }, [currentPage, searchTerm])
+  }, [currentPage, searchTerm, selectedMonth])
 
   useEffect(() => {
     if (initialPatientId) {
@@ -102,6 +104,7 @@ export const PatientsView: React.FC<PatientsViewProps> = ({ initialPatientId, on
         page: currentPage,
         limit: 10,
         search: searchTerm || undefined,
+        mes_nacimiento: selectedMonth ? Number(selectedMonth) : undefined,
       })
       // La respuesta tiene la estructura { data: [...], pagination: {...} }
       setPatients(response?.data || [])
@@ -215,6 +218,7 @@ export const PatientsView: React.FC<PatientsViewProps> = ({ initialPatientId, on
     { id: "cuenta_corriente" as TabType, label: "Cuenta Corriente", icon: File },
     { id: "recordatorios" as TabType, label: "Recordatorios", icon: Bell },
     { id: "turnos" as TabType, label: "Turnos", icon: Calendar },
+    { id: "presupuestos" as TabType, label: "Presupuestos", icon: ClipboardList },
   ]
 
   return (
@@ -231,20 +235,46 @@ export const PatientsView: React.FC<PatientsViewProps> = ({ initialPatientId, on
         </Button>
       </div>
 
-      {/* Search Bar */}
+      {/* Search & Filter Bar */}
       <Card className="p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Buscar por nombre, DNI, teléfono..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value)
-              setCurrentPage(1)
-            }}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Buscar por nombre, DNI, teléfono..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value)
+                setCurrentPage(1)
+              }}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <div className="w-full md:w-72">
+            <select
+              value={selectedMonth}
+              onChange={(e) => {
+                setSelectedMonth(e.target.value)
+                setCurrentPage(1)
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-700 font-medium"
+            >
+              <option value="">Filtrar por mes de cumpleaños</option>
+              <option value="1">Enero 🎂</option>
+              <option value="2">Febrero 🎂</option>
+              <option value="3">Marzo 🎂</option>
+              <option value="4">Abril 🎂</option>
+              <option value="5">Mayo 🎂</option>
+              <option value="6">Junio 🎂</option>
+              <option value="7">Julio 🎂</option>
+              <option value="8">Agosto 🎂</option>
+              <option value="9">Septiembre 🎂</option>
+              <option value="10">Octubre 🎂</option>
+              <option value="11">Noviembre 🎂</option>
+              <option value="12">Diciembre 🎂</option>
+            </select>
+          </div>
         </div>
       </Card>
 
@@ -598,6 +628,7 @@ export const PatientsView: React.FC<PatientsViewProps> = ({ initialPatientId, on
 
                     {activeTab === "recordatorios" && <RemindersSection pacienteId={selectedPatient.id} />}
                     {activeTab === "turnos" && <TurnosSection pacienteId={selectedPatient.id} />}
+                    {activeTab === "presupuestos" && <PresupuestosSection pacienteId={selectedPatient.id} />}
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="p-6 space-y-6">

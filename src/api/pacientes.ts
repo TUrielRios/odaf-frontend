@@ -6,11 +6,13 @@ export const pacientesApi = {
     page?: number
     limit?: number
     search?: string
+    mes_nacimiento?: number
   }): Promise<PaginationResponse<Paciente>> => {
     const queryParams = new URLSearchParams()
     if (params?.page) queryParams.append("page", String(params.page))
     if (params?.limit) queryParams.append("limit", String(params.limit))
     if (params?.search) queryParams.append("search", params.search)
+    if (params?.mes_nacimiento) queryParams.append("mes_nacimiento", String(params.mes_nacimiento))
 
     const query = queryParams.toString()
     const response = await apiClient.get<any>(`/pacientes${query ? `?${query}` : ""}`)
