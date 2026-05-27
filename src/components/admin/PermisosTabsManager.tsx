@@ -16,6 +16,7 @@ const TABS_DISPONIBLES = [
   { id: "feriados", label: "Feriados" },
   { id: "ausencias", label: "Ausencias/Vacaciones" },
   { id: "obras-sociales", label: "Obras Sociales" },
+  { id: "procedimientos", label: "Procedimientos" },
   { id: "recordatorios", label: "Recordatorios" },
   { id: "settings", label: "Configuración" },
 ]
