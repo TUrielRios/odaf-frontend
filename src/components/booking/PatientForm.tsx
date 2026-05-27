@@ -75,10 +75,10 @@ export const PatientForm: React.FC<PatientFormProps> = ({
     if (!formData.nombre.trim()) newErrors.nombre = "Requerido"
     if (!formData.apellido.trim()) newErrors.apellido = "Requerido"
     if (!formData.numero_documento.trim()) newErrors.numero_documento = "Requerido"
-    if (!formData.fecha_nacimiento) newErrors.fecha_nacimiento = "Requerido"
-    if (!formData.telefono?.trim()) newErrors.telefono = "Requerido"
-    if (!formData.email?.trim()) newErrors.email = "Requerido"
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Email inválido"
+    
+    if (formData.email?.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Email inválido"
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -147,7 +147,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <Input
-              label="Fecha de Nacimiento *"
+              label="Fecha de Nacimiento"
               type="date"
               value={formData.fecha_nacimiento}
               onChange={(e) => handleChange("fecha_nacimiento", e.target.value)}
@@ -155,7 +155,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
               className="rounded-xl border-gray-100 bg-gray-50/30 h-12"
             />
             <Select
-              label="Sexo *"
+              label="Sexo"
               value={formData.sexo || "Masculino"}
               onChange={(e) => handleChange("sexo", e.target.value)}
               options={[
@@ -171,7 +171,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
             <div className="relative">
               <Mail className="absolute right-4 top-[3.2rem] text-gray-300" size={18} />
               <Input
-                label="E-mail *"
+                label="E-mail"
                 type="email"
                 value={formData.email || ""}
                 onChange={(e) => handleChange("email", e.target.value)}
@@ -183,7 +183,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
             <div className="relative">
               <Phone className="absolute right-4 top-[3.2rem] text-gray-300" size={18} />
               <Input
-                label="Teléfono *"
+                label="Teléfono"
                 type="tel"
                 value={formData.telefono || ""}
                 onChange={(e) => handleChange("telefono", e.target.value)}
@@ -232,43 +232,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
               className="rounded-xl border-gray-100 bg-gray-50/30 h-12"
             />
           </div>
-        </div>
-
-        {/* Sección 3: Emergencia y Otros */}
-        <div className="bg-white p-6 sm:p-10 rounded-3xl sm:rounded-[2.5rem] border border-gray-50 shadow-sm space-y-6 sm:space-y-8">
-          <h3 className="text-lg sm:text-xl font-black text-gray-900 flex items-center gap-3">
-             <Heart className="text-[#ef4444]" size={20} />
-             Contacto de Emergencia
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Input
-              label="Nombre del Contacto"
-              value={formData.contacto_emergencia || ""}
-              onChange={(e) => handleChange("contacto_emergencia", e.target.value)}
-              placeholder="Nombre del contacto"
-              className="rounded-xl border-gray-100 bg-gray-50/30 h-12"
-            />
-            <Input
-              label="Teléfono de Emergencia"
-              value={formData.telefono_emergencia || ""}
-              onChange={(e) => handleChange("telefono_emergencia", e.target.value)}
-              placeholder="11 1234 5678"
-              className="rounded-xl border-gray-100 bg-gray-50/30 h-12"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-4">Motivo de consulta / Observaciones</label>
-            <textarea
-              value={formData.observaciones || ""}
-              onChange={(e) => handleChange("observaciones", e.target.value)}
-              rows={4}
-              placeholder="Escribe aquí cualquier detalle relevante..."
-              className="w-full rounded-[1.5rem] border border-gray-100 bg-gray-50/30 p-6 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#026498]/20 focus:border-[#026498] resize-none"
-            />
-          </div>
-        </div>
+         </div>
 
         <button
           type="submit"
