@@ -35,6 +35,7 @@ import { CuentaCorrienteSection } from "./CuentaCorrienteSection"
 import { RemindersSection } from "./RemindersSection"
 import { TurnosSection } from "./TurnosSection"
 import { PresupuestosSection } from "./PresupuestosSection"
+import { getErrorMessage } from "../../utils/errors"
 
 type TabType = "info" | "historia" | "odontograma" | "prescripciones" | "tratamientos" | "archivos" | "cuenta_corriente" | "recordatorios" | "turnos" | "presupuestos"
 
@@ -165,6 +166,7 @@ export const PatientsView: React.FC<PatientsViewProps> = ({ initialPatientId, on
       fetchPatients()
     } catch (error) {
       console.error("Error saving patient:", error)
+      alert(getErrorMessage(error, "Error al guardar el paciente"))
     }
   }
 

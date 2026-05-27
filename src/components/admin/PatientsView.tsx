@@ -15,6 +15,7 @@ import {
   ChevronRight
 } from 'lucide-react'
 import { pacientesApi } from '../../api'
+import { getErrorMessage } from '../../utils/errors'
 import type { Paciente, CrearPacienteData } from '../../types'
 
 export const PatientsView: React.FC = () => {
@@ -127,7 +128,7 @@ export const PatientsView: React.FC = () => {
       await fetchPatients()
     } catch (error) {
       console.error('Error saving patient:', error)
-      alert('Error al guardar el paciente')
+      alert(getErrorMessage(error, 'Error al guardar el paciente'))
     }
   }
 

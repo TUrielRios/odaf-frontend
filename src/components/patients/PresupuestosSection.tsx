@@ -7,6 +7,7 @@ import { Button } from "../ui/Button"
 import { Plus, Edit, Trash2, FileText, Calendar, X, DollarSign, Printer, Check, Copy } from "lucide-react"
 import { presupuestosApi } from "../../api"
 import type { Presupuesto, PresupuestoItem, CrearPresupuestoData } from "../../types"
+import { getErrorMessage } from "../../utils/errors"
 
 interface PresupuestosSectionProps {
   pacienteId: string | number
@@ -157,7 +158,7 @@ export const PresupuestosSection: React.FC<PresupuestosSectionProps> = ({ pacien
       fetchPresupuestos()
     } catch (error) {
       console.error("Error saving budget:", error)
-      alert("Error al guardar el presupuesto")
+      alert(getErrorMessage(error, "Error al guardar el presupuesto"))
     }
   }
 

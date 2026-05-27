@@ -10,6 +10,7 @@ import { BookingSuccess } from "./BookingSuccess"
 import { BookingSummary } from "./BookingSummary"
 import type { Servicio, Profesional, CrearPacienteData } from "../../types"
 import { turnosApi, pacientesApi } from "../../api"
+import { getErrorMessage } from "../../utils/errors"
 import { patientPortalApi, getPatientToken } from "../../api/patient-portal"
 import { 
   Check,
@@ -137,7 +138,7 @@ export const BookingForm: React.FC = () => {
       setBookingSuccess(true)
     } catch (error: any) {
       console.error("Error creating appointment:", error)
-      alert("Error al crear el turno. Por favor, intente nuevamente.")
+      alert(getErrorMessage(error, "Error al crear el turno. Por favor, intente nuevamente."))
     } finally {
       setLoading(false)
     }
