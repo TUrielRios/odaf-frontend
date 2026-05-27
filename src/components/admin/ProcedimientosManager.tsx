@@ -26,6 +26,78 @@ interface CustomPricingState {
   precio_sugerido: string
 }
 
+const orderedContractNames = [
+  "20 Ioma",
+  "Osmecon",
+  "Casa Circulo 51",
+  "24 Galeno",
+  "Assist Dent",
+  "Amebpba Circulo 22",
+  "Poder Judicial",
+  "40 Sancor Salud",
+  "83 Staff Medico",
+  "Amffa 55 Farmaceuticos Florencio Ameghino",
+  "America Servicios",
+  "Jerarquicos Salud",
+  "Ospib Roisa",
+  "Imp Roisa",
+  "Ospit Textiles Copago Roisa",
+  "Avalian 16",
+  "Osamoc Roisa",
+  "Doctored 500 Roisa",
+  "Doctored 2000",
+  "Doctored 1000",
+  "Doctored 3000",
+  "Prevencion Salud Circulo 60",
+  "Servicio Penitenciario Federal 57",
+  "Accord Salud",
+  "Pami",
+  "Privamed 770",
+  "Privamed 440 Copago",
+  "Privamed 330 Copago",
+  "Privamed 660 Copago",
+  "Privamed 550 Copago",
+  "Privamed 1000",
+  "Colegio De Escribanos",
+  "Federada Salud",
+  "Osmiss Copago Roisa",
+  "Ospep Roisa",
+  "Doctored Ospese Roisa",
+  "Clero",
+  "Bienestar Salud Copago Roisa",
+  "Ospfp Pintura Roisa",
+  "Visitar Consulmed Copago",
+  "Apres Consulmed",
+  "Omint Circulo 03",
+  "Dosuba Consulmed",
+  "Ensalud Consulmed",
+  "Jardineros Consulmed",
+  "Osalara Consulmed",
+  "Osptv Sat Consulmed",
+  "Sadaic Consulmed",
+  "Ostel Telefonicos Consulmed",
+  "Ospiqyp Quimica Y Petrolera Consulmed",
+  "Asmepriv Consulmed",
+  "Andar Consulmed",
+  "Visitar Consulmed",
+  "Osim Consulmed",
+  "Osdop Consulmed",
+  "Igualdad Salud Roisa Suspendida",
+  "Premedic",
+  "Premedic 100",
+  "Premedic 200",
+  "Premedic 300",
+  "Premedic 400 500",
+  "Salud 360 Sin Copago Redsom",
+  "Saber Salud Redsom Copago",
+  "68 A Osblyca Cueros Y Anexos",
+  "Privamed 880 Exento",
+  "Privamed 880 Grav",
+  "Medicus 97",
+  "95 Medife",
+  "Doctored Cuidarte Plus"
+];
+
 export const ProcedimientosManager: React.FC = () => {
   const [procedimientos, setProcedimientos] = useState<Procedimiento[]>([])
   const [obrasSociales, setObrasSociales] = useState<ObraSocial[]>([])
@@ -60,14 +132,28 @@ export const ProcedimientosManager: React.FC = () => {
         obrasSocialesApi.listar(),
       ])
       setProcedimientos(procedimientosData || [])
-      // Exclude 'Particular' or similar from contract pricing list if necessary, but keep all for the grid
-      setObrasSociales(OSDatas || [])
+      
+      // Sort loaded Obras Sociales according to orderedContractNames
+      const sortedOS = (OSDatas || []).sort((a, b) => {
+        const indexA = orderedContractNames.indexOf(a.nombre)
+        const indexB = orderedContractNames.indexOf(b.nombre)
+        
+        if (indexA !== -1 && indexB !== -1) {
+          return indexA - indexB
+        }
+        if (indexA !== -1) return -1
+        if (indexB !== -1) return 1
+        return a.nombre.localeCompare(b.nombre)
+      })
+
+      setObrasSociales(sortedOS)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
       setLoading(false)
     }
   }
+
 
   const handleCreate = () => {
     setEditingId(null)
