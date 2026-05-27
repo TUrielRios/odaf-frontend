@@ -41,7 +41,6 @@ export const Dashboard: React.FC<{ onNavigateToCalendar?: () => void }> = ({ onN
   })
   const [loading, setLoading] = useState(true)
   const [birthdaysToday, setBirthdaysToday] = useState<Paciente[]>([])
-  const [showBirthdayModal, setShowBirthdayModal] = useState(false)
 
   const calculateAge = (dateStr: string) => {
     const birth = new Date(dateStr + 'T12:00:00')
@@ -91,9 +90,6 @@ export const Dashboard: React.FC<{ onNavigateToCalendar?: () => void }> = ({ onN
           return birth.getDate() === todayDay && (birth.getMonth() + 1) === todayMonth
         })
         setBirthdaysToday(birthdays)
-        if (birthdays.length > 0) {
-          setShowBirthdayModal(true)
-        }
 
         // Calculate stats
         const today = new Date().toISOString().split('T')[0]
@@ -304,8 +300,8 @@ export const Dashboard: React.FC<{ onNavigateToCalendar?: () => void }> = ({ onN
                 </h3>
                 <p className="text-sm text-gray-600 font-bold">
                   {birthdaysToday.length === 1
-                    ? `Hoy es el cumpleaños de ${birthdaysToday[0].nombre} ${birthdaysToday[0].apellido}. ¡Envíale un saludo!`
-                    : `Hoy cumplen años ${birthdaysToday.length} pacientes: ${birthdaysToday.map(p => `${p.nombre} ${p.apellido}`).join(', ')}. ¡Felicítalos!`
+                    ? `Hoy es el cumpleaños de ${birthdaysToday[0].nombre} ${birthdaysToday[0].apellido}${birthdaysToday[0].fecha_nacimiento ? ` (Cumple ${calculateAge(birthdaysToday[0].fecha_nacimiento)} años 🎂)` : ''}. ¡Envíale un saludo!`
+                    : `Hoy cumplen años ${birthdaysToday.length} pacientes: ${birthdaysToday.map(p => `${p.nombre} ${p.apellido}${p.fecha_nacimiento ? ` (${calculateAge(p.fecha_nacimiento)} años)` : ''}`).join(', ')}. ¡Felicítalos!`
                   }
                 </p>
               </div>
@@ -325,10 +321,10 @@ export const Dashboard: React.FC<{ onNavigateToCalendar?: () => void }> = ({ onN
                     href={whatsappUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-2 bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs rounded-xl shadow-md transition-all transform hover:-translate-y-0.5 uppercase tracking-wider"
+                    className="flex items-center gap-1.5 px-3 py-2 bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs rounded-xl shadow-md transition-all transform hover:-translate-y-0.5 uppercase tracking-wider animate-pulse hover:animate-none"
                   >
                     <Send className="h-3.5 w-3.5" />
-                    Saludar a {p.nombre}
+                    Saludar a {p.nombre} {p.fecha_nacimiento ? `(${calculateAge(p.fecha_nacimiento)} años)` : ''}
                   </a>
                 )
               })}
@@ -547,88 +543,6 @@ export const Dashboard: React.FC<{ onNavigateToCalendar?: () => void }> = ({ onN
               ))}
           </div>
         </Card>
-      )}
-
-      {/* Birthday Alert Popup Modal */}
-      {showBirthdayModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all duration-300">
-          <div className="bg-white rounded-3xl overflow-hidden shadow-2xl border border-pink-100 max-w-md w-full relative animate-scaleIn">
-            {/* Decorative top pattern */}
-            <div className="bg-gradient-to-tr from-pink-500 via-purple-500 to-[#026498] h-32 relative flex items-center justify-center overflow-hidden">
-              <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-yellow-300 via-pink-500 to-purple-800"></div>
-              <div className="text-6xl animate-bounce">
-                🎉
-              </div>
-              {/* Floating elements */}
-              <span className="absolute left-6 top-6 text-2xl animate-pulse">🎈</span>
-              <span className="absolute right-6 top-6 text-2xl animate-pulse delay-75">🎁</span>
-              <span className="absolute left-16 bottom-4 text-xl animate-pulse delay-150">✨</span>
-              <span className="absolute right-16 bottom-4 text-xl animate-pulse">🧁</span>
-            </div>
-
-            <div className="p-6 text-center">
-              <h3 className="text-2xl font-black text-gray-900 mb-2">
-                ¡Hoy es el Cumpleaños! 🎂
-              </h3>
-              <p className="text-sm text-gray-600 mb-6 font-semibold">
-                {birthdaysToday.length === 1
-                  ? "Hay un paciente de festejo hoy. ¡Envíale tus mejores deseos!"
-                  : `Hay ${birthdaysToday.length} pacientes de festejo hoy. ¡Dales un saludo especial!`
-                }
-              </p>
-
-              <div className="space-y-3 max-h-60 overflow-y-auto mb-6 px-1 custom-scrollbar">
-                {birthdaysToday.map((p) => {
-                  const age = p.fecha_nacimiento ? calculateAge(p.fecha_nacimiento) : null;
-                  const cleanPhone = p.telefono ? p.telefono.replace(/[^\d+]/g, '') : '';
-                  const whatsappUrl = cleanPhone 
-                    ? `https://wa.me/${cleanPhone.startsWith('+') ? cleanPhone : `54${cleanPhone}`}?text=${encodeURIComponent(`¡Hola ${p.nombre}! Feliz cumpleaños de parte de todo el equipo de ODAF. Que tengas un hermoso día 🎂🎈`)}`
-                    : null;
-
-                  return (
-                    <div
-                      key={p.id}
-                      className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-pink-50/50 to-purple-50/50 border border-pink-100 hover:border-pink-200 transition-all shadow-sm"
-                    >
-                      <div className="text-left">
-                        <p className="font-extrabold text-gray-800 text-sm">
-                          {p.nombre} {p.apellido}
-                        </p>
-                        <p className="text-xs text-gray-500 font-bold mt-0.5">
-                          {age !== null ? `Cumple ${age} años 🥳` : '¡Hoy es su día! 🎈'}
-                        </p>
-                        {p.telefono && (
-                          <p className="text-[10px] text-gray-400 font-bold mt-0.5">
-                            Tel: {p.telefono}
-                          </p>
-                        )}
-                      </div>
-
-                      {whatsappUrl && (
-                        <a
-                          href={whatsappUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center w-9 h-9 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-xl shadow-md transition-all transform hover:scale-105 hover:-rotate-3"
-                          title={`Saludar a ${p.nombre}`}
-                        >
-                          <Send className="w-4 h-4" />
-                        </a>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              <button
-                onClick={() => setShowBirthdayModal(false)}
-                className="w-full py-3 bg-gray-900 hover:bg-gray-800 text-white font-extrabold text-xs rounded-2xl shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-widest"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   )
