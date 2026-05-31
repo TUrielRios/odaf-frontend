@@ -356,25 +356,84 @@ export interface CrearPrescripcionData {
   indicaciones?: string
 }
 
+export interface TratamientoPlan {
+  id: number
+  plan_tratamiento_id: number
+  procedimiento_id: number
+  profesional_id?: number | null
+  nomenclador: string
+  pieza_numero?: string | null
+  pieza_superficies?: Record<string, string> | null
+  fecha_inicio: string
+  estado: "Pendiente" | "Comenzado" | "Cancelado" | "Terminado"
+  precio_paciente: number
+  cobertura_obra_social: number
+  autorizado: boolean
+  observaciones?: string | null
+  createdAt?: string
+  updatedAt?: string
+  procedimiento?: {
+    id: number
+    nombre: string
+    precio_ars: number
+    precio_usd: number
+  }
+  profesional?: {
+    id: number
+    nombre: string
+    apellido: string
+    especialidad: string
+  } | null
+}
+
 export interface PlanTratamiento {
   id: number
   paciente_id: string
+  profesional_id?: number
+  obra_social_id?: number
+  fecha_creacion?: string
   fecha_inicio: string
   fecha_fin?: string
+  fecha_fin_estimada?: string
   descripcion: string
-  estado: "Planificado" | "En_Progreso" | "Completado" | "Cancelado"
+  estado: "Planificado" | "Pendiente" | "En_Progreso" | "Completado" | "Cancelado"
   costo_estimado?: number
+  costo_total?: number
+  costo_obra_social?: number
+  costo_paciente?: number
+  tratamientos?: TratamientoPlan[]
+  tratamientosItems?: TratamientoPlan[]
   observaciones?: string
   createdAt?: string
   updatedAt?: string
+  paciente?: {
+    id: string
+    nombre: string
+    apellido: string
+    numero_documento: string
+    obra_social_id?: number
+  }
+  profesional?: {
+    id: number
+    nombre: string
+    apellido: string
+    especialidad: string
+  }
+  obraSocial?: {
+    id: number
+    nombre: string
+    plan?: string
+  }
 }
 
 export interface CrearPlanTratamientoData {
-  paciente_id: string
+  paciente_id: string | number
+  profesional_id?: number
+  obra_social_id?: number
   fecha_inicio: string
   fecha_fin?: string
   descripcion: string
-  estado: "Planificado" | "En_Progreso" | "Completado" | "Cancelado"
+  estado: "Planificado" | "Pendiente" | "En_Progreso" | "Completado" | "Cancelado"
   costo_estimado?: number
   observaciones?: string
 }
