@@ -131,7 +131,7 @@ export const BookingForm: React.FC = () => {
         fecha: selectedDateTime.split('T')[0],
         hora_inicio: horaInicio,
         hora_fin: horaFin,
-        estado: "Pendiente",
+        estado: "Confirmado",
         pago_confirmado: false,
       })
 
@@ -174,7 +174,7 @@ export const BookingForm: React.FC = () => {
     { id: 2, name: "PROFESIONAL", icon: User },
     { id: 3, name: "FECHA", icon: Calendar },
     { id: 4, name: "DATOS", icon: FileText },
-    { id: 5, name: "PAGO", icon: CreditCard }
+    { id: 5, name: "CONFIRMACIÓN", icon: Check }
   ]
 
   return (
@@ -206,14 +206,14 @@ export const BookingForm: React.FC = () => {
                     {step === 2 && "Elige tu profesional"}
                     {step === 3 && "Elige la fecha y hora"}
                     {step === 4 && "Tus datos personales"}
-                    {step === 5 && "Confirma y paga tu seña"}
+                    {step === 5 && "Confirma tu turno"}
                   </h2>
                   <p className="text-gray-400 text-xs sm:text-sm font-medium tracking-tight">
                     {step === 1 && "Elige el tratamiento que necesitas."}
                     {step === 2 && "Selecciona el especialista que te atenderá."}
                     {step === 3 && "Selecciona el día y horario que prefieras."}
                     {step === 4 && "Completa el formulario para confirmar tu turno."}
-                    {step === 5 && "Tu lugar quedará reservado una vez confirmes."}
+                    {step === 5 && "Revisa los detalles y confirma tu cita."}
                   </p>
                 </div>
               </div>
