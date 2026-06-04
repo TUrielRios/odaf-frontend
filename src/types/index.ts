@@ -163,6 +163,7 @@ export interface HorariosSemanales {
   viernes: HorarioDia
   sabado: HorarioDia
   domingo: HorarioDia
+  dias_especificos?: Record<string, HorarioDia>
 }
 
 // Servicio types

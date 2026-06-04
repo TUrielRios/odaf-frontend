@@ -520,7 +520,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                   return (
                     <div
                       key={appt.id}
-                      className="absolute p-0.5 pointer-events-auto transition-all"
+                      className={`absolute p-0.5 transition-all ${draggingAppointment ? 'pointer-events-none' : 'pointer-events-auto'}`}
                       style={{
                         top: `${appt.top}px`,
                         height: `${appt.height}px`,
@@ -548,7 +548,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                         }}
                       >
                         <div className="font-black truncate uppercase leading-tight text-[9px] mb-0.5">
-                          {appt.paciente?.apellido} {appt.paciente?.nombre}
+                          {appt.paciente?.apellido} {appt.paciente?.nombre} {appt.paciente?.obraSocial?.nombre ? `(${appt.paciente.obraSocial.nombre})` : ''}
                         </div>
                         <div className="text-[8px] font-bold opacity-90 leading-none">
                           {appt.hora_inicio.substring(0, 5)} - {appt.hora_fin.substring(0, 5)}
@@ -647,7 +647,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                         return (
                           <div
                             key={appt.id}
-                            className="absolute p-0.5 pointer-events-auto transition-all"
+                            className={`absolute p-0.5 transition-all ${draggingAppointment ? 'pointer-events-none' : 'pointer-events-auto'}`}
                             style={{
                               top: `${appt.top}px`,
                               height: `${appt.height}px`,
@@ -674,7 +674,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                               }}
                             >
                               <div className="font-black truncate uppercase leading-tight text-[8px] mb-0.5">
-                                {getInitials(appt.profesional)} {appt.paciente?.apellido} {appt.paciente?.nombre}
+                                {getInitials(appt.profesional)} {appt.paciente?.apellido} {appt.paciente?.nombre} {appt.paciente?.obraSocial?.nombre ? `(${appt.paciente.obraSocial.nombre})` : ''}
                               </div>
                               <div className="text-[7px] font-bold opacity-90 leading-none">
                                 {appt.hora_inicio.substring(0, 5)} - {appt.hora_fin.substring(0, 5)}
@@ -716,7 +716,18 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
             return (
               <div
                 key={index}
-                className={`min-h-[120px] p-2 ${!day.isCurrentMonth ? 'opacity-50' : ''} ${holiday ? 'bg-red-50' : 'bg-white'}`}
+                className={`min-h-[120px] p-2 ${!day.isCurrentMonth ? 'opacity-50' : ''} ${holiday ? 'bg-red-50' : 'bg-white'} ${draggingAppointment ? 'bg-blue-50/10' : ''}`}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  if (draggingAppointment) {
+                    const year = day.date.getFullYear()
+                    const month = String(day.date.getMonth() + 1).padStart(2, '0')
+                    const d = String(day.date.getDate()).padStart(2, '0')
+                    const dateStr = `${year}-${month}-${d}`
+                    handleDropAppointment(dateStr, draggingAppointment.hora_inicio)
+                  }
+                }}
               >
                 <div className="flex items-center gap-1 mb-2">
                   <div className={`text-sm font-medium ${isToday
@@ -740,8 +751,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                     return (
                       <div
                         key={appointment.id}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('appointmentId', appointment.id.toString())
+                          setDraggingAppointment(appointment)
+                        }}
+                        onDragEnd={() => setDraggingAppointment(null)}
                         onClick={() => setSelectedAppointment(appointment)}
-                        className="p-1 rounded text-xs cursor-pointer hover:opacity-80 transition-opacity"
+                        className={`p-1 rounded text-xs cursor-pointer hover:opacity-80 transition-opacity ${draggingAppointment ? 'pointer-events-none' : ''}`}
                         style={{
                           backgroundColor: `${statusColor}20`,
                           borderLeft: `3px solid ${statusColor}`
@@ -751,7 +768,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                           {appointment.hora_inicio}
                         </div>
                         <div className="truncate opacity-75">
-                          {appointment.paciente?.nombre} {appointment.paciente?.apellido}
+                          {appointment.paciente?.nombre} {appointment.paciente?.apellido} {appointment.paciente?.obraSocial?.nombre ? `(${appointment.paciente.obraSocial.nombre})` : ''}
                         </div>
                       </div>
                     )

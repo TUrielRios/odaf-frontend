@@ -74,6 +74,10 @@ export const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
       }
     }
 
+    if (professionalSchedule && professionalSchedule.dias_especificos && professionalSchedule.dias_especificos[dateString]) {
+      return professionalSchedule.dias_especificos[dateString].activo
+    }
+
     const dayOfWeek = date.getDay()
     if (!professionalSchedule) return dayOfWeek !== 0
     const dayNames = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']

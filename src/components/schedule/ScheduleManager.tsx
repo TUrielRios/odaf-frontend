@@ -35,11 +35,78 @@ const horariosPorDefecto: HorariosSemanales = {
 }
 
 export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professional, onScheduleUpdate }) => {
-  const [horarios, setHorarios] = useState<HorariosSemanales>(horariosPorDefecto)
+  const [horarios, setHorarios] = useState<HorariosSemanales>({ ...horariosPorDefecto, dias_especificos: {} })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [hasChanges, setHasChanges] = useState(false)
+
+  // Specific dates state
+  const [newSpecificDate, setNewSpecificDate] = useState("")
+  const [newSpecificRanges, setNewSpecificRanges] = useState<RangoHorario[]>([{ inicio: "09:00", fin: "18:00" }])
+
+  const handleAddSpecificRange = () => {
+    setNewSpecificRanges((prev) => [...prev, { inicio: "09:00", fin: "18:00" }])
+  }
+
+  const handleRemoveSpecificRange = (index: number) => {
+    setNewSpecificRanges((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleSpecificRangeChange = (index: number, field: keyof RangoHorario, value: string) => {
+    setNewSpecificRanges((prev) => prev.map((r, i) => (i === index ? { ...r, [field]: value } : r)))
+  }
+
+  const handleAddSpecificDate = () => {
+    if (!newSpecificDate) {
+      alert("Por favor seleccione una fecha")
+      return
+    }
+
+    // Validate ranges
+    const dummyHorario: HorarioDia = { activo: true, rangos: newSpecificRanges }
+    const error = validateSchedule(newSpecificDate, dummyHorario)
+    if (error) {
+      alert(error)
+      return
+    }
+
+    // Check if date already exists
+    const currentSpecific = horarios.dias_especificos || {}
+    if (currentSpecific[newSpecificDate]) {
+      if (!window.confirm(`La fecha ${newSpecificDate} ya tiene horarios configurados. ¿Desea sobrescribirlos?`)) {
+        return
+      }
+    }
+
+    setHorarios((prev) => ({
+      ...prev,
+      dias_especificos: {
+        ...(prev.dias_especificos || {}),
+        [newSpecificDate]: {
+          activo: true,
+          rangos: newSpecificRanges,
+        },
+      },
+    }))
+    setHasChanges(true)
+    setNewSpecificDate("")
+    setNewSpecificRanges([{ inicio: "09:00", fin: "18:00" }])
+  }
+
+  const handleRemoveSpecificDate = (date: string) => {
+    if (window.confirm(`¿Está seguro de eliminar la fecha específica ${date}?`)) {
+      setHorarios((prev) => {
+        const nextSpecific = { ...(prev.dias_especificos || {}) }
+        delete nextSpecific[date]
+        return {
+          ...prev,
+          dias_especificos: nextSpecific,
+        }
+      })
+      setHasChanges(true)
+    }
+  }
 
   useEffect(() => {
     fetchSchedules()
@@ -49,10 +116,13 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professional, 
     try {
       setLoading(true)
       const response = await profesionalesApi.obtenerHorarios(professional.id)
-      setHorarios(response.horarios)
+      setHorarios({
+        ...response.horarios,
+        dias_especificos: response.horarios.dias_especificos || {},
+      })
     } catch (error) {
       console.error("Error fetching schedules:", error)
-      setHorarios(horariosPorDefecto)
+      setHorarios({ ...horariosPorDefecto, dias_especificos: {} })
     } finally {
       setLoading(false)
     }
@@ -210,8 +280,20 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professional, 
       }
     }
 
+    // Validate dias_especificos
+    if (horarios.dias_especificos) {
+      for (const [date, info] of Object.entries(horarios.dias_especificos)) {
+        const error = validateSchedule(date, info)
+        if (error) {
+          newErrors[`spec_${date}`] = `${date}: ${error}`
+        }
+      }
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
+      const firstError = Object.values(newErrors)[0]
+      alert(`Error de validación: ${firstError}`)
       return
     }
 
@@ -393,6 +475,127 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professional, 
             )}
           </div>
         ))}
+      </div>
+
+      {/* Sección Días Específicos */}
+      <div className="mt-8 pt-6 border-t border-border">
+        <h4 className="text-md font-semibold text-foreground flex items-center mb-2">
+          <Clock className="h-5 w-5 mr-2 text-[#026498]" />
+          Días Específicos de Atención (Fechas Únicas / Irregulares)
+        </h4>
+        <p className="text-xs text-muted-foreground mb-4">
+          Configura fechas específicas donde el profesional trabajará con un horario particular, ideal para profesionales que vienen solo algunos días sueltos al mes.
+        </p>
+
+        {/* Formulario para agregar nuevo día específico */}
+        <div className="bg-blue-50/30 border border-blue-100 rounded-lg p-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Seleccione la Fecha
+              </label>
+              <Input
+                type="date"
+                value={newSpecificDate}
+                onChange={(e) => setNewSpecificDate(e.target.value)}
+                className="w-full h-10"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Rangos Horarios para ese Día
+              </label>
+              <div className="space-y-3">
+                {newSpecificRanges.map((rango, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <Input
+                      type="time"
+                      value={rango.inicio}
+                      onChange={(e) => handleSpecificRangeChange(idx, "inicio", e.target.value)}
+                      className="h-9"
+                    />
+                    <span className="text-gray-400 font-medium">a</span>
+                    <Input
+                      type="time"
+                      value={rango.fin}
+                      onChange={(e) => handleSpecificRangeChange(idx, "fin", e.target.value)}
+                      className="h-9"
+                    />
+                    {newSpecificRanges.length > 1 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRemoveSpecificRange(idx)}
+                        className="text-red-600 border-red-100 hover:bg-red-50 p-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <div className="flex gap-2 mt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddSpecificRange}
+                    className="text-xs font-bold py-1 h-8"
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" />
+                    Añadir Rango
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleAddSpecificDate}
+                    className="text-xs font-bold py-1 h-8 bg-[#026498] text-white hover:bg-opacity-95"
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" />
+                    Agregar Fecha
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Listado de fechas específicas configuradas */}
+        <div className="space-y-3">
+          <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Fechas Específicas Configuradas ({Object.keys(horarios.dias_especificos || {}).length})
+          </label>
+          {(!horarios.dias_especificos || Object.keys(horarios.dias_especificos).length === 0) ? (
+            <div className="text-center py-6 border-2 border-dashed border-border rounded-lg text-muted-foreground text-sm">
+              No hay fechas específicas configuradas. Utilice el formulario superior para añadir una.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {Object.entries(horarios.dias_especificos).sort((a, b) => a[0].localeCompare(b[0])).map(([date, info]) => (
+                <div key={date} className="flex items-center justify-between border border-border rounded-lg p-3 bg-white hover:shadow-sm transition-shadow">
+                  <div>
+                    <span className="text-sm font-bold text-[#026498]">
+                      {new Date(date + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                    </span>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {info.rangos.map((r, i) => (
+                        <span key={i} className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full font-mono font-medium">
+                          {r.inicio} - {r.fin}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRemoveSpecificDate(date)}
+                    className="text-red-600 border-red-100 hover:bg-red-50 p-2 h-8 w-8 flex items-center justify-center rounded-lg"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {hasChanges && (
