@@ -1,8 +1,8 @@
 import { apiClient } from "../lib/api-client"
 
 export const recordatoriosApi = {
-  async enviar(turno_id: number): Promise<{ message: string; messageId?: string }> {
-    return apiClient.post("/recordatorios/enviar", { turno_id })
+  async enviar(turno_id: number, custom_message?: string): Promise<{ message: string; messageId?: string }> {
+    return apiClient.post("/recordatorios/enviar", { turno_id, mensaje_personalizado: custom_message })
   },
   async enviarMasivo(fecha: string): Promise<{ message: string; enviados: number; errores: number; total: number }> {
     return apiClient.post("/recordatorios/enviar-masivo", { fecha })
