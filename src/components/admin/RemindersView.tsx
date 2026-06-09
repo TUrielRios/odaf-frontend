@@ -170,7 +170,6 @@ export const RemindersView: React.FC = () => {
     const phone = cleanPhone(editingWhatsAppTurno.paciente?.telefono)
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(whatsAppMessageText)}`
     window.open(url, '_blank', 'noopener,noreferrer')
-    handleUpdateStatus(editingWhatsAppTurno.id, 'Confirmado por Whatsapp')
     setEditingWhatsAppTurno(null)
   }
 
