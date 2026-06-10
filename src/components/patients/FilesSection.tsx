@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { Card } from "../ui/Card"
 import { Button } from "../ui/Button"
-import { Trash2, Calendar, X, FileText, Download, Upload, File, Eye } from "lucide-react"
+import { Trash2, Calendar, X, FileText, Download, Upload, File, Eye, ZoomIn, ZoomOut, RotateCcw } from "lucide-react"
 import { archivosApi } from "../../api"
 import type { Archivo } from "../../types"
 
@@ -25,9 +25,19 @@ export const FilesSection: React.FC<FilesSectionProps> = ({ pacienteId }) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dragCounterRef = useRef(0)
 
+  const [scale, setScale] = useState(1)
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [isDraggingImage, setIsDraggingImage] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+
   useEffect(() => {
     fetchArchivos()
   }, [pacienteId])
+
+  useEffect(() => {
+    setScale(1)
+    setPosition({ x: 0, y: 0 })
+  }, [previewUrl])
 
   const fetchArchivos = async () => {
     try {
@@ -134,6 +144,35 @@ export const FilesSection: React.FC<FilesSectionProps> = ({ pacienteId }) => {
       ? archivo.ruta
       : `${getBaseUrl()}${archivo.ruta}`
     window.open(downloadUrl, "_blank")
+  }
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (scale <= 1) return
+    e.preventDefault()
+    setIsDraggingImage(true)
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y })
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingImage) return
+    setPosition({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y
+    })
+  }
+
+  const handleMouseUp = () => {
+    setIsDraggingImage(false)
+  }
+
+  const handleWheel = (e: React.WheelEvent) => {
+    const zoomFactor = 0.1
+    let newScale = scale + (e.deltaY < 0 ? zoomFactor : -zoomFactor)
+    newScale = Math.max(0.5, Math.min(newScale, 5))
+    setScale(newScale)
+    if (newScale === 1) {
+      setPosition({ x: 0, y: 0 })
+    }
   }
 
   const getFileIcon = (tipo: string) => {
@@ -316,9 +355,70 @@ export const FilesSection: React.FC<FilesSectionProps> = ({ pacienteId }) => {
                 </button>
               </div>
             </div>
-            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-gray-100">
+            <div className="flex-1 overflow-hidden p-4 flex items-center justify-center bg-gray-100">
               {previewFile.tipo.includes("image") ? (
-                <img src={previewUrl} alt={previewFile.nombre} className="max-w-full max-h-full object-contain" />
+                <div className="relative overflow-hidden w-full h-[70vh] flex items-center justify-center bg-gray-150 rounded-lg">
+                  <div 
+                    className={`w-full h-full flex items-center justify-center select-none ${scale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}`}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                    onWheel={handleWheel}
+                  >
+                    <img 
+                      src={previewUrl} 
+                      alt={previewFile.nombre} 
+                      className="max-w-full max-h-full object-contain pointer-events-none" 
+                      style={{
+                        transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+                        transition: isDraggingImage ? 'none' : 'transform 0.15s ease-out'
+                      }}
+                    />
+                  </div>
+
+                  {/* Floating Zoom Controls */}
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-3 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-gray-200/50 z-10">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newScale = Math.max(0.5, scale - 0.2)
+                        setScale(newScale)
+                        if (newScale === 1) setPosition({ x: 0, y: 0 })
+                      }}
+                      className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-600 hover:text-gray-900"
+                      title="Alejar"
+                    >
+                      <ZoomOut className="h-4 w-4" />
+                    </button>
+                    <span className="text-xs font-bold text-gray-700 min-w-[36px] text-center select-none">
+                      {Math.round(scale * 100)}%
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newScale = Math.min(5, scale + 0.2)
+                        setScale(newScale)
+                      }}
+                      className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-600 hover:text-[#026498]"
+                      title="Acercar"
+                    >
+                      <ZoomIn className="h-4 w-4" />
+                    </button>
+                    <div className="w-px h-4 bg-gray-200" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setScale(1)
+                        setPosition({ x: 0, y: 0 })
+                      }}
+                      className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-600 hover:text-red-500"
+                      title="Restablecer"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
               ) : previewFile.tipo.includes("pdf") ? (
                 <iframe src={`${previewUrl}#toolbar=0`} className="w-full h-[70vh]" title={previewFile.nombre} />
               ) : (

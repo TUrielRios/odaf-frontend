@@ -520,7 +520,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                   return (
                     <div
                       key={appt.id}
-                      className={`absolute p-0.5 transition-all ${draggingAppointment ? 'pointer-events-none' : 'pointer-events-auto'}`}
+                      className={`absolute p-0.5 transition-all ${draggingAppointment && draggingAppointment.id !== appt.id ? 'pointer-events-none' : 'pointer-events-auto'}`}
                       style={{
                         top: `${appt.top}px`,
                         height: `${appt.height}px`,
@@ -647,7 +647,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                         return (
                           <div
                             key={appt.id}
-                            className={`absolute p-0.5 transition-all ${draggingAppointment ? 'pointer-events-none' : 'pointer-events-auto'}`}
+                            className={`absolute p-0.5 transition-all ${draggingAppointment && draggingAppointment.id !== appt.id ? 'pointer-events-none' : 'pointer-events-auto'}`}
                             style={{
                               top: `${appt.top}px`,
                               height: `${appt.height}px`,
@@ -758,7 +758,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                         }}
                         onDragEnd={() => setDraggingAppointment(null)}
                         onClick={() => setSelectedAppointment(appointment)}
-                        className={`p-1 rounded text-xs cursor-pointer hover:opacity-80 transition-opacity ${draggingAppointment ? 'pointer-events-none' : ''}`}
+                        className={`p-1 rounded text-xs cursor-pointer hover:opacity-80 transition-opacity ${draggingAppointment && draggingAppointment.id !== appointment.id ? 'pointer-events-none' : ''}`}
                         style={{
                           backgroundColor: `${statusColor}20`,
                           borderLeft: `3px solid ${statusColor}`
