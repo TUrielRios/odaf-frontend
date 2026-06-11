@@ -141,7 +141,7 @@ export const AdminApp: React.FC = () => {
   const renderCurrentView = () => {
     switch (currentView) {
       case 'dashboard':
-        return <Dashboard onNavigateToCalendar={() => setCurrentView('calendar')} />
+        return <Dashboard onNavigateToCalendar={() => setCurrentView('calendar')} user={user} />
       case 'calendar':
         return <CalendarView onNavigateToPatient={handleNavigateToPatient} />
       case 'patients':
@@ -175,7 +175,7 @@ export const AdminApp: React.FC = () => {
           </div>
         )
       default:
-        return <Dashboard />
+        return <Dashboard user={user} />
     }
   }
 
