@@ -546,6 +546,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                           color: isLight ? '#000' : '#FFF',
                           boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
                         }}
+                        title={appt.observaciones ? `Observaciones: ${appt.observaciones}` : undefined}
                       >
                         <div className="font-black truncate uppercase leading-tight text-[9px] mb-0.5">
                           {appt.paciente?.apellido} {appt.paciente?.nombre} {appt.paciente?.obraSocial?.nombre ? `(${appt.paciente.obraSocial.nombre})` : ''}
@@ -556,6 +557,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                         {appt.height > 40 && (
                           <div className="text-[7px] opacity-80 truncate mt-0.5 font-medium">
                             {!splitByProfessional && `${getInitials(appt.profesional)} - `} {appt.servicio?.nombre}
+                          </div>
+                        )}
+                        {appt.observaciones && (
+                          <div className="text-[7.5px] font-bold italic opacity-95 mt-1 truncate border-t border-black/10 pt-0.5 leading-normal">
+                            Obs: "{appt.observaciones}"
                           </div>
                         )}
                       </div>
@@ -672,6 +678,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                                 borderColor: 'rgba(0,0,0,0.1)',
                                 color: isLight ? '#000' : '#FFF',
                               }}
+                              title={appt.observaciones ? `Observaciones: ${appt.observaciones}` : undefined}
                             >
                               <div className="font-black truncate uppercase leading-tight text-[8px] mb-0.5">
                                 {getInitials(appt.profesional)} {appt.paciente?.apellido} {appt.paciente?.nombre} {appt.paciente?.obraSocial?.nombre ? `(${appt.paciente.obraSocial.nombre})` : ''}
@@ -679,6 +686,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                               <div className="text-[7px] font-bold opacity-90 leading-none">
                                 {appt.hora_inicio.substring(0, 5)} - {appt.hora_fin.substring(0, 5)}
                               </div>
+                              {appt.observaciones && (
+                                <div className="text-[6.5px] italic opacity-90 truncate mt-0.5 border-t border-black/10 pt-0.5 leading-normal">
+                                  Obs: "{appt.observaciones}"
+                                </div>
+                              )}
                             </div>
                           </div>
                         )
@@ -763,6 +775,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                           backgroundColor: `${statusColor}20`,
                           borderLeft: `3px solid ${statusColor}`
                         }}
+                        title={appointment.observaciones ? `Observaciones: ${appointment.observaciones}` : undefined}
                       >
                         <div className="font-medium truncate">
                           {appointment.hora_inicio}

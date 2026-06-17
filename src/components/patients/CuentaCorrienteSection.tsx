@@ -15,6 +15,26 @@ interface SummaryData {
     saldo: number
 }
 
+const getLocalDateString = () => {
+    const date = new Date()
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+}
+
+const formatMovementDate = (dateString: string) => {
+    if (!dateString) return ''
+    try {
+        const cleanDate = dateString.split('T')[0]
+        const [year, month, day] = cleanDate.split('-')
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+        return date.toLocaleDateString('es-ES')
+    } catch (e) {
+        return dateString
+    }
+}
+
 export const CuentaCorrienteSection: React.FC<CuentaCorrienteSectionProps> = ({ pacienteId }) => {
     const [movements, setMovements] = useState<MovimientoCuenta[]>([])
     const [summary, setSummary] = useState<SummaryData>({ ingresos: 0, deudas: 0, saldo: 0 })
@@ -24,7 +44,7 @@ export const CuentaCorrienteSection: React.FC<CuentaCorrienteSectionProps> = ({ 
 
     // Form state
     const [formData, setFormData] = useState({
-        fecha: new Date().toISOString().split('T')[0],
+        fecha: getLocalDateString(),
         monto: '',
         forma_pago: 'Efectivo',
         descripcion: ''
@@ -61,7 +81,7 @@ export const CuentaCorrienteSection: React.FC<CuentaCorrienteSectionProps> = ({ 
     const handleOpenModal = (type: 'Ingreso' | 'Deuda') => {
         setModalType(type)
         setFormData({
-            fecha: new Date().toISOString().split('T')[0],
+            fecha: getLocalDateString(),
             monto: '',
             forma_pago: 'Efectivo',
             descripcion: ''
@@ -168,7 +188,7 @@ export const CuentaCorrienteSection: React.FC<CuentaCorrienteSectionProps> = ({ 
                                 movements.map((mov) => (
                                     <tr key={mov.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {new Date(mov.fecha).toLocaleDateString('es-ES')}
+                                            {formatMovementDate(mov.fecha)}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${mov.tipo === 'Ingreso' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'

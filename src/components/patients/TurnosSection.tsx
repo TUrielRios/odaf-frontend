@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react"
 import { Card } from "../ui/Card"
 import { turnosApi } from "../../api"
 import type { Turno } from "../../types"
-import { Calendar, Clock, User, Stethoscope, AlertCircle } from "lucide-react"
+import { Calendar, Clock, User, Stethoscope, AlertCircle, Pencil } from "lucide-react"
+import { EditAppointmentModal } from "../admin/EditAppointmentModal"
 
 interface PatientAppointmentsSectionProps {
   pacienteId: string
@@ -13,6 +14,7 @@ interface PatientAppointmentsSectionProps {
 export const TurnosSection: React.FC<PatientAppointmentsSectionProps> = ({ pacienteId }) => {
   const [appointments, setAppointments] = useState<Turno[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedTurno, setSelectedTurno] = useState<Turno | null>(null)
 
   useEffect(() => {
     fetchAppointments()
@@ -112,10 +114,28 @@ export const TurnosSection: React.FC<PatientAppointmentsSectionProps> = ({ pacie
                     </div>
                   </div>
                 )}
+
+                <div className="flex items-center justify-end md:justify-center">
+                  <button
+                    onClick={() => setSelectedTurno(turno)}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-50 hover:text-[#026498] hover:border-[#026498]/30 transition-all active:scale-95"
+                  >
+                    <Pencil className="h-3.5 w-3.5 text-[#026498]" />
+                    <span>Editar</span>
+                  </button>
+                </div>
               </div>
             </Card>
           ))}
         </div>
+      )}
+
+      {selectedTurno && (
+        <EditAppointmentModal
+          appointment={selectedTurno}
+          onClose={() => setSelectedTurno(null)}
+          onUpdate={fetchAppointments}
+        />
       )}
     </div>
   )

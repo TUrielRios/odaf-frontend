@@ -9,6 +9,18 @@ import { cuentaCorrienteApi } from '../../api/cuenta-corriente';
 import { Plus, Minus } from 'lucide-react';
 import { NewMovementModal } from './cashflow/NewMovementModal';
 
+const formatMovementDate = (dateString: string) => {
+    if (!dateString) return '';
+    try {
+        const cleanDate = dateString.split('T')[0];
+        const [year, month, day] = cleanDate.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        return format(date, "d MMM. yyyy", { locale: es });
+    } catch (e) {
+        return dateString;
+    }
+};
+
 export default function CashFlow() {
     const [movimientos, setMovimientos] = useState<any[]>([]);
     const [balance, setBalance] = useState(0);
@@ -125,7 +137,7 @@ export default function CashFlow() {
                                 {paginatedMovimientos.map((m) => (
                                     <div key={m.id} className="grid grid-cols-12 gap-4 text-sm items-center py-2 border-b last:border-0 hover:bg-gray-50">
                                         <div className="col-span-2 text-gray-600">
-                                            {format(new Date(m.fecha), "d MMM. yyyy", { locale: es })}
+                                            {formatMovementDate(m.fecha)}
                                         </div>
                                         <div className="col-span-6">
                                             <div className="font-medium text-gray-900">
