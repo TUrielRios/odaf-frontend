@@ -38,7 +38,7 @@ export const PrescriptionsSection: React.FC<PrescriptionsSectionProps> = ({ paci
 
   const handleCreate = () => {
     setFormData({
-      paciente_id: pacienteId,
+      paciente_id: String(pacienteId),
       fecha: new Date().toISOString().split("T")[0],
     })
     setModalMode("create")
@@ -58,10 +58,10 @@ export const PrescriptionsSection: React.FC<PrescriptionsSectionProps> = ({ paci
     setShowModal(true)
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm("¿Estás seguro de eliminar esta prescripción?")) {
       try {
-        await prescripcionesApi.eliminar(id as any)
+        await prescripcionesApi.eliminar(id)
         fetchPrescripciones()
       } catch (error) {
         console.error("Error deleting prescription:", error)

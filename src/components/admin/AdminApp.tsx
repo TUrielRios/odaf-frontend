@@ -16,7 +16,6 @@ import { FeriadosManager } from './FeriadosManager'
 import { AusenciasManager } from './AusenciasManager'
 import { PermisosTabsManager } from './PermisosTabsManager'
 import { authApi } from '../../api/auth'
-import { apiClient } from '../../lib/api-client'
 import type { AuthUser } from '../../types'
 
 const AdminLogin: React.FC<{ onLogin: (user: AuthUser) => void }> = ({ onLogin }) => {

@@ -38,8 +38,6 @@ const DIENTES_INFERIORES = [
   "3.1", "3.2", "3.3", "3.4", "3.5", "3.6", "3.7", "3.8",
 ]
 
-const TODAS_LAS_PIEZAS = [...DIENTES_SUPERIORES, ...DIENTES_INFERIORES]
-
 const SUPERFICIES = ["oclusal", "vestibular", "lingual", "mesial", "distal"] as const
 
 const ESTADOS_TRATAMIENTO = [
@@ -208,7 +206,7 @@ export const TreatmentPlansSection: React.FC<TreatmentPlansSectionProps> = ({ pa
 
   const fetchPaciente = async () => {
     try {
-      const data = await pacientesApi.obtener(pacienteId)
+      const data = await pacientesApi.obtener(String(pacienteId))
       setPaciente(data)
     } catch (error) {
       console.error("Error fetching patient details:", error)
@@ -279,7 +277,7 @@ export const TreatmentPlansSection: React.FC<TreatmentPlansSectionProps> = ({ pa
 
   const handleCreate = () => {
     setFormData({
-      paciente_id: pacienteId,
+      paciente_id: String(pacienteId),
       descripcion: "",
       observaciones: "",
     })
@@ -298,11 +296,11 @@ export const TreatmentPlansSection: React.FC<TreatmentPlansSectionProps> = ({ pa
     setShowModal(true)
   }
 
-  const handleView = (plan: PlanTratamiento) => {
-    setSelectedPlan(plan)
-    setModalMode("view")
-    setShowModal(true)
-  }
+  // const handleView = (plan: PlanTratamiento) => {
+  //   setSelectedPlan(plan)
+  //   setModalMode("view")
+  //   setShowModal(true)
+  // }
 
   const handleDelete = async (id: string) => {
     if (window.confirm("¿Estás seguro de eliminar este plan de tratamiento?")) {

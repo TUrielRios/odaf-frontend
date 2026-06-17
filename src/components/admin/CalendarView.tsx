@@ -8,11 +8,8 @@ import {
   Calendar as CalendarIcon,
   Clock,
   User,
-  Briefcase,
   Phone,
   Mail,
-  List,
-  LayoutGrid,
   Plus,
   Search,
   X,
@@ -82,12 +79,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [searchLoading, setSearchLoading] = useState(false)
   const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [newAppointmentData, setNewAppointmentData] = useState<{ fecha: string, hora_inicio: string, sobre_turno: boolean } | null>(null)
+  const [newAppointmentData, setNewAppointmentData] = useState<{ fecha: string, hora_inicio: string, sobre_turno: boolean, profesional_id?: number } | null>(null)
   const [draggingAppointment, setDraggingAppointment] = useState<Turno | null>(null)
   const [feriados, setFeriados] = useState<Feriado[]>([])
   const [splitByProfessional, setSplitByProfessional] = useState(false)
 
-  const TIME_SLOTS = []
+  const TIME_SLOTS: string[] = []
   for (let h = 8; h <= 20; h++) {
     TIME_SLOTS.push(`${String(h).padStart(2, '0')}:00`)
     TIME_SLOTS.push(`${String(h).padStart(2, '0')}:30`)
@@ -97,6 +94,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
     fetchAppointments()
     fetchProfessionals()
     fetchFeriados()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentDate, viewType])
 
   // Patient search - server-side
@@ -267,7 +265,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
       return durB - durA
     })
 
-    const clusters: { appointments: any[], maxColumns: number }[] = []
+    const clusters: { appointments: (Turno & { column: number })[], maxColumns: number }[] = []
     
     sorted.forEach(appt => {
       const start = getMinutesSinceStart(appt.hora_inicio)
@@ -308,16 +306,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
     })))
   }
 
-  const handleQuickConfirm = async (id: number) => {
-    try {
-      await turnosApi.confirmarPago(id, true)
-      alert('Pago confirmado exitosamente')
-      fetchAppointments() // Refresh appointments
-    } catch (error) {
-      console.error('Error confirming payment:', error)
-      alert('Error al confirmar el pago')
-    }
-  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // const handleQuickConfirm = async (id: number) => {
+  //   try {
+  //     await turnosApi.confirmarPago(id, true)
+  //     alert('Pago confirmado exitosamente')
+  //     fetchAppointments() // Refresh appointments
+  //   } catch (error) {
+  //     console.error('Error confirming payment:', error)
+  //     alert('Error al confirmar el pago')
+  //   }
+  // }
 
   const handleDeleteAppointment = async (id: number) => {
     if (window.confirm('¿Estás seguro de eliminar este turno? Esta acción no se puede deshacer.')) {
@@ -357,7 +356,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
     return filtered.sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio))
   }
 
-  const getInitials = (profesional?: any) => {
+  const getInitials = (profesional?: Profesional | null) => {
     if (!profesional) return '??'
     const n = profesional.nombre?.[0] || ''
     const a = profesional.apellido?.[0] || profesional.apellido?.[1] || ''
@@ -546,7 +545,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                           color: isLight ? '#000' : '#FFF',
                           boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
                         }}
-                        title={appt.observaciones ? `Observaciones: ${appt.observaciones}` : undefined}
+                        title={`Agendado por: ${appt.agendado_por || 'Paciente'}${appt.observaciones ? `\nObservaciones: ${appt.observaciones}` : ''}`}
                       >
                         <div className="font-black truncate uppercase leading-tight text-[9px] mb-0.5">
                           {appt.paciente?.apellido} {appt.paciente?.nombre} {appt.paciente?.obraSocial?.nombre ? `(${appt.paciente.obraSocial.nombre})` : ''}
@@ -678,7 +677,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                                 borderColor: 'rgba(0,0,0,0.1)',
                                 color: isLight ? '#000' : '#FFF',
                               }}
-                              title={appt.observaciones ? `Observaciones: ${appt.observaciones}` : undefined}
+                              title={`Agendado por: ${appt.agendado_por || 'Paciente'}${appt.observaciones ? `\nObservaciones: ${appt.observaciones}` : ''}`}
                             >
                               <div className="font-black truncate uppercase leading-tight text-[8px] mb-0.5">
                                 {getInitials(appt.profesional)} {appt.paciente?.apellido} {appt.paciente?.nombre} {appt.paciente?.obraSocial?.nombre ? `(${appt.paciente.obraSocial.nombre})` : ''}
@@ -775,7 +774,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                           backgroundColor: `${statusColor}20`,
                           borderLeft: `3px solid ${statusColor}`
                         }}
-                        title={appointment.observaciones ? `Observaciones: ${appointment.observaciones}` : undefined}
+                        title={`Agendado por: ${appointment.agendado_por || 'Paciente'}${appointment.observaciones ? `\nObservaciones: ${appointment.observaciones}` : ''}`}
                       >
                         <div className="font-medium truncate">
                           {appointment.hora_inicio}
@@ -1147,7 +1146,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                       await turnosApi.actualizar(selectedAppointment.id, { estado: 'Atendiéndose' })
                       fetchAppointments()
                       setSelectedAppointment(null)
-                    } catch (error) {
+                    } catch {
                       alert('Error al iniciar atención')
                     }
                   }}

@@ -1,12 +1,11 @@
 import React from 'react'
 import { dentalColors } from '../../config/colors'
 
-interface CardProps {
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
   className?: string
   title?: string
   subtitle?: string
-  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -14,12 +13,14 @@ export const Card: React.FC<CardProps> = ({
   className = '',
   title,
   subtitle,
-  onClick
+  onClick,
+  ...props
 }) => {
   return (
     <div 
       onClick={onClick}
       className={`bg-white rounded-xl shadow-sm border border-[${dentalColors.gray200}] overflow-hidden ${className}`}
+      {...props}
     >
       {(title || subtitle) && (
         <div className={`px-6 py-4 border-b border-[${dentalColors.gray200}]`}>

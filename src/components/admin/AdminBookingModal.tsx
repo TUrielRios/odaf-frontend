@@ -7,7 +7,7 @@ import { ServiceSelection } from "../booking/ServiceSelection"
 import { ProfessionalSelection } from "../booking/ProfessionalSelection"
 import { DateTimeSelection } from "../booking/DateTimeSelection"
 import { PatientForm } from "../booking/PatientForm"
-import type { Servicio, Profesional, CrearPacienteData } from "../../types"
+import type { Servicio, Profesional, CrearPacienteData, Paciente } from "../../types"
 import { turnosApi, pacientesApi } from "../../api"
 
 interface AdminBookingModalProps {
@@ -22,9 +22,10 @@ export const AdminBookingModal: React.FC<AdminBookingModalProps> = ({ onClose, o
   const [selectedDateTime, setSelectedDateTime] = useState<string | null>(null)
   const [patientType, setPatientType] = useState<"existing" | "new" | null>(null)
   const [searchPaciente, setSearchPaciente] = useState("")
-  const [pacientes, setPacientes] = useState<any[]>([])
+  const [pacientes, setPacientes] = useState<Paciente[]>([])
   const [selectedPacienteId, setSelectedPacienteId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [agendadoPor, setAgendadoPor] = useState("")
 
   React.useEffect(() => {
     const searchPatients = async () => {
@@ -81,6 +82,7 @@ export const AdminBookingModal: React.FC<AdminBookingModalProps> = ({ onClose, o
         hora_fin: horaFin,
         estado: "Creado",
         pago_confirmado: false,
+        agendado_por: agendadoPor || undefined
       })
 
       onSuccess()
@@ -101,7 +103,7 @@ export const AdminBookingModal: React.FC<AdminBookingModalProps> = ({ onClose, o
       let existingPatient = null
       try {
         existingPatient = await pacientesApi.buscarPorDocumento(data.numero_documento)
-      } catch (e) {
+      } catch {
         // Patient not found - this is expected for new patients
         existingPatient = null
       }
@@ -119,9 +121,10 @@ export const AdminBookingModal: React.FC<AdminBookingModalProps> = ({ onClose, o
         pacienteId = newPatient.id
       }
       await createTurno(pacienteId)
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error handling patient:", error)
-      const msg = error?.response?.data?.error || error?.response?.data?.errors?.[0]?.msg || error?.message || "Error al procesar los datos del paciente."
+      const err = error as any
+      const msg = err?.response?.data?.error || err?.response?.data?.errors?.[0]?.msg || err?.message || "Error al procesar los datos del paciente."
       alert(msg)
       setLoading(false)
     }
@@ -294,10 +297,21 @@ export const AdminBookingModal: React.FC<AdminBookingModalProps> = ({ onClose, o
                                <Check size={32} strokeWidth={3} />
                              </div>
                              <h4 className="text-xl font-black text-gray-900">Paciente Seleccionado</h4>
-                             <p className="text-green-700 font-bold mt-1 text-center">{searchPaciente}</p>
+                             <p className="text-green-700 font-bold mt-1 text-center mb-4">{searchPaciente}</p>
                              
+                             <div className="w-full max-w-sm text-left mb-6">
+                               <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Quién da el turno</label>
+                               <input
+                                 type="text"
+                                 placeholder="Nombre de quien da el turno..."
+                                 value={agendadoPor}
+                                 onChange={(e) => setAgendadoPor(e.target.value)}
+                                 className="w-full px-4 py-3 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[#026498] text-gray-700 font-bold text-sm outline-none transition-all"
+                               />
+                             </div>
+
                              <Button
-                              className="mt-8 w-full bg-[#026498] hover:bg-[#0c4a6e]"
+                              className="w-full bg-[#026498] hover:bg-[#0c4a6e]"
                               onClick={() => createTurno(selectedPacienteId)}
                               loading={loading}
                              >
@@ -330,6 +344,18 @@ export const AdminBookingModal: React.FC<AdminBookingModalProps> = ({ onClose, o
                              Cambiar a paciente existente
                            </button>
                         </div>
+                        
+                        <div className="px-4">
+                           <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Quién da el turno</label>
+                           <input
+                             type="text"
+                             placeholder="Nombre de quien da el turno..."
+                             value={agendadoPor}
+                             onChange={(e) => setAgendadoPor(e.target.value)}
+                             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[#026498] text-gray-700 font-bold text-sm outline-none transition-all"
+                           />
+                        </div>
+
                         <PatientForm
                           onPatientData={handlePatientSubmit}
                           loading={loading}

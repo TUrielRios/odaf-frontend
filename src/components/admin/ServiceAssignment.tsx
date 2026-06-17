@@ -21,7 +21,6 @@ import {
   AlertCircle, 
   Search, 
   Check, 
-  ChevronRight, 
   Clock, 
   DollarSign,
   Layers

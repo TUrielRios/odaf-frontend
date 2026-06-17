@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import {
     Dialog,
     DialogContent,
@@ -10,7 +10,7 @@ import { Button } from "../../ui/Button"
 import { Label } from "../../ui/label"
 import { RadioGroup, RadioGroupItem } from "../../ui/radio-group"
 import { Select } from "../../ui/Select"
-import { X } from "lucide-react"
+
 import { liquidacionesApi } from "../../../api/liquidaciones"
 import { profesionalesApi } from "../../../api/profesionales"
 import { obrasSocialesApi } from "../../../api/obras-sociales"

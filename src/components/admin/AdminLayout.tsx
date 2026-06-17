@@ -15,8 +15,6 @@ import {
   CalendarOff,
   Shield,
   Bell,
-  ChevronLeft,
-  ChevronRight,
   PanelLeftClose,
   PanelLeft,
   Menu

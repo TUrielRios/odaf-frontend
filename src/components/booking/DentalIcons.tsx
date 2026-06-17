@@ -1,4 +1,3 @@
-import React from 'react';
 
 export const ToothIcon = ({ size = 24, className = "" }) => (
   <svg 

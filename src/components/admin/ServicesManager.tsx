@@ -237,7 +237,7 @@ export const ServicesManager: React.FC = () => {
                 </div>
                 <div className={`flex items-center text-[${dentalColors.primary}] font-semibold`}>
                   <DollarSign className="h-4 w-4 mr-1" />
-                  {parseFloat(service.precio_base || service.precio || 0).toFixed(2)}
+                  {parseFloat(String(service.precio_base || 0)).toFixed(2)}
                 </div>
               </div>
 

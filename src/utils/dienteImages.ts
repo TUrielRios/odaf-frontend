@@ -36,7 +36,7 @@ import inferior46 from '../assets/dientes/inferior/4.6.png';
 import inferior47 from '../assets/dientes/inferior/4.7.png';
 import inferior48 from '../assets/dientes/inferior/4.8.png';
 
-export const dienteImages: Record<string, any> = {
+export const dienteImages: Record<string, string | { default: string }> = {
   // Cuadrante 1 - Superior derecho
   '1.1': superior11,
   '1.2': superior12,
@@ -104,15 +104,16 @@ export const dienteImages: Record<string, any> = {
 };
 
 export const getDienteImage = (numero: string): string | null => {
-  return dienteImages[numero] || null;
+  const image = dienteImages[numero];
+  if (!image) return null;
+  if (typeof image === 'object' && 'default' in image) {
+    return image.default;
+  }
+  return image;
 };
 
 export const getDienteImageSrc = (numero: string): string => {
-  const image = getDienteImage(numero);
-  if (image && typeof image === 'object' && image.default) {
-    return image.default;
-  }
-  return image || '';
+  return getDienteImage(numero) || '';
 };
 
 // Función para verificar si un diente es superior

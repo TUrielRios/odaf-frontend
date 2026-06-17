@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import { Card } from "../ui/Card"
 import { Button } from "../ui/Button"
 import { Input } from "../ui/Input"
-import { Plus, Search, Edit, Trash2, User, Mail, Phone, Award, Award as IdCard, Clock, Briefcase, Upload, X } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, User, Mail, Phone, Award, Award as IdCard, Clock, Briefcase, Upload } from 'lucide-react'
 import { adminApi } from "../../api/admin"
 import { ScheduleManager } from "../schedule/ScheduleManager"
 import { ServiceAssignment } from "./ServiceAssignment"

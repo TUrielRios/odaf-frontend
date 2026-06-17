@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { Button } from "../ui/Button"
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/Card"
+import { Card, CardContent } from "../ui/Card"
 import { Badge } from "../ui/badge"
 import { Pagination } from "../ui/Pagination"
 import { liquidacionesApi } from "../../api/liquidaciones"

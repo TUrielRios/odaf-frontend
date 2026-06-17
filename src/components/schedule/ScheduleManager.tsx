@@ -34,6 +34,8 @@ const horariosPorDefecto: HorariosSemanales = {
   domingo: { activo: false, rangos: [{ inicio: "00:00", fin: "00:00" }] },
 }
 
+type DiaSemana = Exclude<keyof HorariosSemanales, "dias_especificos">
+
 export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professional, onScheduleUpdate }) => {
   const [horarios, setHorarios] = useState<HorariosSemanales>({ ...horariosPorDefecto, dias_especificos: {} })
   const [loading, setLoading] = useState(true)
@@ -133,7 +135,7 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professional, 
     return timeRegex.test(time)
   }
 
-  const validateSchedule = (dia: string, horario: HorarioDia): string | null => {
+  const validateSchedule = (_dia: string, horario: HorarioDia): string | null => {
     if (!horario.activo) return null
 
     if (!horario.rangos || horario.rangos.length === 0) {
@@ -180,7 +182,7 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professional, 
     return null
   }
 
-  const handleActiveChange = (dia: keyof HorariosSemanales, activo: boolean) => {
+  const handleActiveChange = (dia: DiaSemana, activo: boolean) => {
     setHorarios((prev) => ({
       ...prev,
       [dia]: {
@@ -199,19 +201,19 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professional, 
     }
   }
 
-  const handleFrequencyChange = (dia: keyof HorariosSemanales, frecuencia: "semanal" | "quincenal") => {
+  const handleFrequencyChange = (dia: DiaSemana, frecuencia: "semanal" | "quincenal") => {
     setHorarios((prev) => ({
       ...prev,
       [dia]: {
         ...prev[dia],
         frecuencia,
-        semana_inicio: frecuencia === "quincenal" ? (prev[dia].semana_inicio ?? 0) : undefined,
+        semana_inicio: frecuencia === "quincenal" ? (prev[dia]?.semana_inicio ?? 0) : undefined,
       },
     }))
     setHasChanges(true)
   }
 
-  const handleSemanaInicioChange = (dia: keyof HorariosSemanales, semana_inicio: 0 | 1) => {
+  const handleSemanaInicioChange = (dia: DiaSemana, semana_inicio: 0 | 1) => {
     setHorarios((prev) => ({
       ...prev,
       [dia]: {
@@ -223,7 +225,7 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professional, 
   }
 
   const handleRangeChange = (
-    dia: keyof HorariosSemanales,
+    dia: DiaSemana,
     rangoIndex: number,
     field: keyof RangoHorario,
     value: string,
@@ -232,9 +234,9 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professional, 
       ...prev,
       [dia]: {
         ...prev[dia],
-        rangos: prev[dia].rangos.map((rango, i) =>
+        rangos: prev[dia]?.rangos.map((rango, i) =>
           i === rangoIndex ? { ...rango, [field]: value } : rango
-        ),
+        ) || [],
       },
     }))
     setHasChanges(true)
@@ -248,23 +250,23 @@ export const ScheduleManager: React.FC<ScheduleManagerProps> = ({ professional, 
     }
   }
 
-  const handleAddRange = (dia: keyof HorariosSemanales) => {
+  const handleAddRange = (dia: DiaSemana) => {
     setHorarios((prev) => ({
       ...prev,
       [dia]: {
         ...prev[dia],
-        rangos: [...prev[dia].rangos, { inicio: "08:00", fin: "17:00" }],
+        rangos: [...(prev[dia]?.rangos || []), { inicio: "08:00", fin: "17:00" }],
       },
     }))
     setHasChanges(true)
   }
 
-  const handleRemoveRange = (dia: keyof HorariosSemanales, rangoIndex: number) => {
+  const handleRemoveRange = (dia: DiaSemana, rangoIndex: number) => {
     setHorarios((prev) => ({
       ...prev,
       [dia]: {
         ...prev[dia],
-        rangos: prev[dia].rangos.filter((_, i) => i !== rangoIndex),
+        rangos: prev[dia]?.rangos.filter((_, i) => i !== rangoIndex) || [],
       },
     }))
     setHasChanges(true)

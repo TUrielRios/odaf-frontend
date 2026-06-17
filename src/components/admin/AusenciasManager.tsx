@@ -68,11 +68,11 @@ export const AusenciasManager: React.FC = () => {
         profesional_id: Number(formData.profesional_id),
         fecha_inicio: formData.fecha_inicio,
         fecha_fin: formData.fecha_fin,
-        hora_inicio: formData.hora_inicio || null,
-        hora_fin: formData.hora_fin || null,
+        hora_inicio: formData.hora_inicio || undefined,
+        hora_fin: formData.hora_fin || undefined,
         motivo: formData.motivo,
         es_recurrente: formData.es_recurrente,
-        dia_semana: formData.es_recurrente ? Number(formData.dia_semana) : null
+        dia_semana: formData.es_recurrente ? Number(formData.dia_semana) : undefined
       });
 
       setIsModalOpen(false);

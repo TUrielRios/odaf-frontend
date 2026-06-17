@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react"
-import { useParams, useNavigate, Link } from "react-router-dom"
+import { useParams, Link } from "react-router-dom"
 import { patientPortalApi } from "../../api/patient-portal"
 import { dentalColors } from "../../config/colors"
-import { Calendar, Clock, User, CheckCircle, ArrowLeft } from "lucide-react"
-import { format, parseISO, addDays, startOfDay, isBefore, isAfter } from "date-fns"
+import { CheckCircle, ArrowLeft } from "lucide-react"
+import { format, parseISO, addDays, startOfDay } from "date-fns"
 import { es } from "date-fns/locale"
 
 export const ReprogramarTurno: React.FC = () => {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const [turno, setTurno] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [fechaSeleccionada, setFechaSeleccionada] = useState("")

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { patientPortalApi } from "../../api/patient-portal"
 import { dentalColors } from "../../config/colors"
-import { Calendar, Clock, User, MoreVertical } from "lucide-react"
+import { Calendar, Clock, User } from "lucide-react"
 import { format, parseISO, isAfter } from "date-fns"
 import { es } from "date-fns/locale"
 

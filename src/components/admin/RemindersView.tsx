@@ -98,7 +98,7 @@ export const RemindersView: React.FC = () => {
   })
   const [turnos, setTurnos] = useState<Turno[]>([])
   const [loading, setLoading] = useState(true)
-  const [sendingId, setSendingId] = useState<number | null>(null)
+  const sendingId = null
   const [sendingAll, setSendingAll] = useState(false)
   const [sentIds, setSentIds] = useState<Set<number>>(new Set())
   const [errorIds, setErrorIds] = useState<Set<number>>(new Set())
@@ -218,23 +218,23 @@ export const RemindersView: React.FC = () => {
     }
   }
 
-  const handleSendReminder = async (turnoId: number) => {
-    try {
-      setSendingId(turnoId)
-      setErrorIds((prev) => {
-        const next = new Set(prev)
-        next.delete(turnoId)
-        return next
-      })
-      await recordatoriosApi.enviar(turnoId)
-      setSentIds((prev) => new Set(prev).add(turnoId))
-    } catch (error) {
-      console.error('Error sending reminder:', error)
-      setErrorIds((prev) => new Set(prev).add(turnoId))
-    } finally {
-      setSendingId(null)
-    }
-  }
+  // const handleSendReminder = async (turnoId: number) => {
+  //   try {
+  //     setSendingId(turnoId)
+  //     setErrorIds((prev) => {
+  //       const next = new Set(prev)
+  //       next.delete(turnoId)
+  //       return next
+  //     })
+  //     await recordatoriosApi.enviar(turnoId)
+  //     setSentIds((prev) => new Set(prev).add(turnoId))
+  //   } catch (error) {
+  //     console.error('Error sending reminder:', error)
+  //     setErrorIds((prev) => new Set(prev).add(turnoId))
+  //   } finally {
+  //     setSendingId(null)
+  //   }
+  // }
 
   const handleUpdateStatus = async (turnoId: number, nuevoEstado: string) => {
     try {

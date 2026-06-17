@@ -38,7 +38,7 @@ export const ClinicalHistorySection: React.FC<ClinicalHistorySectionProps> = ({ 
 
   const handleCreate = () => {
     setFormData({
-      paciente_id: pacienteId,
+      paciente_id: String(pacienteId),
       fecha: new Date().toISOString().split("T")[0],
     })
     setModalMode("create")
@@ -58,10 +58,10 @@ export const ClinicalHistorySection: React.FC<ClinicalHistorySectionProps> = ({ 
     setShowModal(true)
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm("¿Estás seguro de eliminar este historial clínico?")) {
       try {
-        await historialesClinicosApi.eliminar(id as any)
+        await historialesClinicosApi.eliminar(id)
         fetchHistoriales()
       } catch (error) {
         console.error("Error deleting clinical history:", error)

@@ -8,7 +8,7 @@ import { PatientForm } from "./PatientForm"
 import { PaymentStep } from "./PaymentStep"
 import { BookingSuccess } from "./BookingSuccess"
 import { BookingSummary } from "./BookingSummary"
-import type { Servicio, Profesional, CrearPacienteData } from "../../types"
+import type { Servicio, Profesional, CrearPacienteData, Turno } from "../../types"
 import { turnosApi, pacientesApi } from "../../api"
 import { getErrorMessage } from "../../utils/errors"
 import { patientPortalApi, getPatientToken } from "../../api/patient-portal"
@@ -18,7 +18,6 @@ import {
   User,
   Calendar,
   FileText,
-  CreditCard,
   ArrowLeft
 } from "lucide-react"
 
@@ -59,7 +58,7 @@ export const BookingForm: React.FC = () => {
             const today = new Date()
             const currentMonth = today.getMonth()
             const currentYear = today.getFullYear()
-            const tieneTurnoEsteMes = turnos.some((t: any) => {
+            const tieneTurnoEsteMes = turnos.some((t: Turno) => {
               const fechaTurno = new Date(t.fecha)
               return fechaTurno.getMonth() === currentMonth && 
                      fechaTurno.getFullYear() === currentYear &&
@@ -131,12 +130,12 @@ export const BookingForm: React.FC = () => {
         fecha: selectedDateTime.split('T')[0],
         hora_inicio: horaInicio,
         hora_fin: horaFin,
-        estado: "Confirmado",
+        estado: "Pendiente",
         pago_confirmado: false,
       })
 
       setBookingSuccess(true)
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error creating appointment:", error)
       alert(getErrorMessage(error, "Error al crear el turno. Por favor, intente nuevamente."))
     } finally {

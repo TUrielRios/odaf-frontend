@@ -19,7 +19,8 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({ appo
         profesional_id: appointment.profesional_id,
         paciente_id: appointment.paciente_id,
         estado: appointment.estado,
-        observaciones: appointment.observaciones || ''
+        observaciones: appointment.observaciones || '',
+        agendado_por: appointment.agendado_por || ''
     })
     const [loading, setLoading] = useState(false)
     const [profesionales, setProfesionales] = useState<Profesional[]>([])
@@ -212,6 +213,15 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({ appo
                         </select>
                     </div>
                     <div>
+                        <label className="block text-sm font-medium mb-1">Agendado por</label>
+                        <Input
+                            type="text"
+                            value={formData.agendado_por}
+                            onChange={(e) => setFormData({ ...formData, agendado_por: e.target.value })}
+                            placeholder="Nombre de quien agendó el turno..."
+                        />
+                    </div>
+                    <div>
                         <label className="block text-sm font-medium mb-1">Observaciones</label>
                         <textarea
                             value={formData.observaciones}
@@ -228,8 +238,9 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({ appo
                                     setSendingReminder(true)
                                     await recordatoriosApi.enviar(appointment.id)
                                     alert('Recordatorio enviado correctamente')
-                                } catch (error: any) {
-                                    alert(error.message || 'Error al enviar recordatorio')
+                                } catch (error) {
+                                    const err = error as Error
+                                    alert(err.message || 'Error al enviar recordatorio')
                                 } finally {
                                     setSendingReminder(false)
                                 }

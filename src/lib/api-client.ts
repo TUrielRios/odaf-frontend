@@ -25,8 +25,8 @@ export class ApiClient {
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const headers: HeadersInit = {
-      ...options.headers,
+    const headers: Record<string, string> = {
+      ...options.headers as Record<string, string>,
     }
 
     // Solo añadir Content-Type si no es FormData
@@ -92,7 +92,7 @@ export class ApiClient {
 
     formData.append("file", file)
 
-    const headers: HeadersInit = {}
+    const headers: Record<string, string> = {}
     if (this.token) {
       headers["Authorization"] = `Bearer ${this.token}`
     }

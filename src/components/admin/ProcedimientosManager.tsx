@@ -530,8 +530,8 @@ export const ProcedimientosManager: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white">
                       {preciosObraSocial.map((item) => {
-                        const isEditingCell = (field: typeof editingCell.field) =>
-                          editingCell?.obraSocialId === item.obra_social_id && editingCell?.field === field
+                        const isEditingCell = (field: 'codigo' | 'precio_paciente' | 'cobertura' | 'precio_sugerido') =>
+                          editingCell !== null && editingCell.obraSocialId === item.obra_social_id && editingCell.field === field
 
                         return (
                           <tr key={item.obra_social_id} className="hover:bg-blue-50/30 transition-colors">

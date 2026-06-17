@@ -28,7 +28,8 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
         hora_fin: initialData?.hora_fin || '10:30',
         estado: 'Creado',
         observaciones: '',
-        sobre_turno: initialData?.sobre_turno || false
+        sobre_turno: initialData?.sobre_turno || false,
+        agendado_por: ''
     })
 
     const [loading, setLoading] = useState(false)
@@ -109,7 +110,8 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
                 hora_fin: formData.hora_fin,
                 estado: formData.estado,
                 observaciones: formData.observaciones,
-                sobre_turno: formData.sobre_turno
+                sobre_turno: formData.sobre_turno,
+                agendado_por: formData.agendado_por || undefined
             })
             onCreate()
             onClose()
@@ -144,7 +146,8 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
                 hora_fin: formData.hora_fin,
                 estado: formData.estado,
                 observaciones: formData.observaciones,
-                sobre_turno: formData.sobre_turno
+                sobre_turno: formData.sobre_turno,
+                agendado_por: formData.agendado_por || undefined
             })
             onCreate()
             onClose()
@@ -358,14 +361,24 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Observaciones</label>
-                                <textarea
-                                    value={formData.observaciones}
-                                    onChange={(e) => setFormData({ ...formData, observaciones: e.target.value })}
-                                    className="w-full border border-gray-200 rounded-xl p-3 h-12 bg-white text-sm focus:ring-2 focus:ring-[#026498] focus:border-transparent outline-none transition-all resize-none"
-                                    placeholder="Notas adicionales..."
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Quién da el turno</label>
+                                <Input
+                                    type="text"
+                                    placeholder="Nombre de quien da el turno..."
+                                    value={formData.agendado_por}
+                                    onChange={(e) => setFormData({ ...formData, agendado_por: e.target.value })}
+                                    className="h-12"
                                 />
                             </div>
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Observaciones</label>
+                            <textarea
+                                value={formData.observaciones}
+                                onChange={(e) => setFormData({ ...formData, observaciones: e.target.value })}
+                                className="w-full border border-gray-200 rounded-xl p-3 h-16 bg-white text-sm focus:ring-2 focus:ring-[#026498] focus:border-transparent outline-none transition-all resize-none"
+                                placeholder="Notas adicionales..."
+                            />
                         </div>
                     </div>
 

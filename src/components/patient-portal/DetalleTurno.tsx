@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { useParams, Link, useNavigate } from "react-router-dom"
+import { useParams, Link } from "react-router-dom"
 import { patientPortalApi } from "../../api/patient-portal"
 import { dentalColors } from "../../config/colors"
 import { Calendar, Clock, User, FileText, ArrowLeft } from "lucide-react"
@@ -8,7 +8,6 @@ import { es } from "date-fns/locale"
 
 export const DetalleTurno: React.FC = () => {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const [turno, setTurno] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 

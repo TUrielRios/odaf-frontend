@@ -9,7 +9,6 @@ import {
   User,
   Briefcase,
   CheckCircle,
-  AlertCircle,
   Loader2,
   Mail,
   X,
@@ -25,7 +24,7 @@ interface RemindersSectionProps {
 export const RemindersSection: React.FC<RemindersSectionProps> = ({ pacienteId }) => {
   const [turnos, setTurnos] = useState<Turno[]>([])
   const [loading, setLoading] = useState(true)
-  const [sendingId, setSendingId] = useState<number | null>(null)
+  const sendingId = null
   const [sentIds, setSentIds] = useState<Set<number>>(new Set())
   const [errorId, setErrorId] = useState<number | null>(null)
   const [template, setTemplate] = useState('')
@@ -125,7 +124,7 @@ export const RemindersSection: React.FC<RemindersSectionProps> = ({ pacienteId }
     const hora = `${turno.hora_inicio} hs`
 
     if (customTemplate) {
-      let msg = customTemplate
+      const msg = customTemplate
         .replace(/\{nombre\}/g, turno.paciente?.nombre || '')
         .replace(/\{apellido\}/g, turno.paciente?.apellido || '')
         .replace(/\{fecha\}/g, fechaFormateada)
@@ -191,19 +190,19 @@ export const RemindersSection: React.FC<RemindersSectionProps> = ({ pacienteId }
     }
   }
 
-  const handleSendReminder = async (turnoId: number) => {
-    try {
-      setSendingId(turnoId)
-      setErrorId(null)
-      await recordatoriosApi.enviar(turnoId)
-      setSentIds((prev) => new Set(prev).add(turnoId))
-    } catch (error) {
-      console.error('Error sending reminder:', error)
-      setErrorId(turnoId)
-    } finally {
-      setSendingId(null)
-    }
-  }
+  // const handleSendReminder = async (turnoId: number) => {
+  //   try {
+  //     setSendingId(turnoId)
+  //     setErrorId(null)
+  //     await recordatoriosApi.enviar(turnoId)
+  //     setSentIds((prev) => new Set(prev).add(turnoId))
+  //   } catch (error) {
+  //     console.error('Error sending reminder:', error)
+  //     setErrorId(turnoId)
+  //   } finally {
+  //     setSendingId(null)
+  //   }
+  // }
 
   const formatDate = (fecha: string) => {
     return new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', {

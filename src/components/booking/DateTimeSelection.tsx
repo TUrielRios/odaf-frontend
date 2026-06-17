@@ -17,7 +17,7 @@ interface DateTimeSelectionProps {
 }
 
 export const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
-  selectedService,
+  selectedService: _selectedService,
   selectedProfessional,
   selectedDateTime,
   onDateTimeSelect,

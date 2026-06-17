@@ -5,7 +5,7 @@ import type {
   PaginatedResponse,
   HorariosSemanales,
   HorariosResponse,
-  horariosDisponiblesResponse,
+  HorariosDisponiblesResponse,
   Servicio,
   AsignarServicioData,
 } from "../types"

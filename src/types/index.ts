@@ -59,6 +59,8 @@ export interface Paciente {
   condicion_iva?: string
   numero_afiliado?: string
   foto_url?: string
+  contacto_emergencia?: string
+  telefono_emergencia?: string
   tipo_facturacion: 'A' | 'B' | 'C'
   numero_facturacion?: string
   etiquetas?: string[]
@@ -88,6 +90,7 @@ export interface CrearPacienteData {
   email?: string
   ocupacion?: string
   recomendado_por?: string
+  condicion_iva?: string
   tipo_facturacion?: 'A' | 'B' | 'C'
   numero_facturacion?: string
   etiquetas?: string[]
@@ -231,6 +234,7 @@ export interface Turno {
   profesional?: Profesional
   servicio?: Servicio
   subservicio?: SubServicio
+  agendado_por?: string
 }
 
 export interface CrearTurnoData {
@@ -246,6 +250,7 @@ export interface CrearTurnoData {
   precio_final?: number
   estado?: string
   sobre_turno?: boolean
+  agendado_por?: string
 }
 
 export interface CrearTurnoBookingData {
@@ -554,6 +559,8 @@ export interface HorariosResponse {
 export interface HorariosDisponiblesResponse {
   fecha: string
   horarios_disponibles: string[]
+  disponible?: boolean
+  mensaje?: string
 }
 
 export interface MovimientoCuenta {

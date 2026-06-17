@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { Card } from "../ui/Card"
 import { Button } from "../ui/Button"
-import { Trash2, Calendar, X, FileText, Download, Upload, File, Eye, ZoomIn, ZoomOut, RotateCcw } from "lucide-react"
+import { Trash2, Calendar, X, FileText, Download, Upload, Eye, ZoomIn, ZoomOut, RotateCcw } from "lucide-react"
 import { archivosApi } from "../../api"
 import type { Archivo } from "../../types"
 
@@ -114,10 +114,10 @@ export const FilesSection: React.FC<FilesSectionProps> = ({ pacienteId }) => {
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm("¿Estás seguro de eliminar este archivo?")) {
       try {
-        await archivosApi.eliminar(id as any)
+        await archivosApi.eliminar(id)
         fetchArchivos()
       } catch (error) {
         console.error("Error deleting file:", error)

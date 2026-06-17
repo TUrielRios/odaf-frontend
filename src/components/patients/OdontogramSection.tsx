@@ -164,10 +164,10 @@ export const OdontogramSection: React.FC<OdontogramSectionProps> = ({ pacienteId
     setShowModal(true)
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm("¿Estás seguro de eliminar este odontograma?")) {
       try {
-        await odontogramasApi.eliminar(id as any)
+        await odontogramasApi.eliminar(id)
         fetchOdontogramas()
       } catch (error) {
         console.error("Error deleting odontograma:", error)
@@ -274,7 +274,7 @@ export const OdontogramSection: React.FC<OdontogramSectionProps> = ({ pacienteId
   const handleSubmit = async () => {
     try {
       const dataToSend: CrearOdontogramaData = {
-        paciente_id: pacienteId,
+        paciente_id: String(pacienteId),
         profesional_id: profesionalActual,
         fecha: new Date().toISOString().split("T")[0],
         dientes_data: dientesData,
@@ -509,7 +509,6 @@ export const OdontogramSection: React.FC<OdontogramSectionProps> = ({ pacienteId
                         isReadOnly={modalMode === "view"}
                         onSuperficieClick={(superficie) => handleSuperficieClick(num, superficie)}
                         onDienteClick={() => handleDienteClick(num)}
-                        isBorrarMode={isBorrarMode}
                         hasActiveTratamiento={!!selectedTratamiento || isBorrarMode}
                       />
                     ))}
@@ -529,7 +528,6 @@ export const OdontogramSection: React.FC<OdontogramSectionProps> = ({ pacienteId
                           isReadOnly={modalMode === "view"}
                           onSuperficieClick={(superficie) => handleSuperficieClick(num, superficie)}
                           onDienteClick={() => handleDienteClick(num)}
-                          isBorrarMode={isBorrarMode}
                           hasActiveTratamiento={!!selectedTratamiento || isBorrarMode}
                         />
                       ))}
@@ -555,7 +553,6 @@ export const OdontogramSection: React.FC<OdontogramSectionProps> = ({ pacienteId
                           isReadOnly={modalMode === "view"}
                           onSuperficieClick={(superficie) => handleSuperficieClick(num, superficie)}
                           onDienteClick={() => handleDienteClick(num)}
-                          isBorrarMode={isBorrarMode}
                           hasActiveTratamiento={!!selectedTratamiento || isBorrarMode}
                         />
                       ))}
@@ -575,7 +572,6 @@ export const OdontogramSection: React.FC<OdontogramSectionProps> = ({ pacienteId
                         isReadOnly={modalMode === "view"}
                         onSuperficieClick={(superficie) => handleSuperficieClick(num, superficie)}
                         onDienteClick={() => handleDienteClick(num)}
-                        isBorrarMode={isBorrarMode}
                         hasActiveTratamiento={!!selectedTratamiento || isBorrarMode}
                       />
                     ))}
@@ -630,7 +626,6 @@ interface DienteVisualProps {
   isReadOnly: boolean
   onSuperficieClick: (superficie: string) => void
   onDienteClick: () => void
-  isBorrarMode: boolean
   hasActiveTratamiento: boolean
 }
 
@@ -641,7 +636,6 @@ const DienteVisual: React.FC<DienteVisualProps> = ({
   isReadOnly,
   onSuperficieClick,
   onDienteClick,
-  isBorrarMode,
   hasActiveTratamiento,
 }) => {
   const [imgError, setImgError] = useState(false)
