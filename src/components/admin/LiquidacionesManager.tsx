@@ -5,12 +5,14 @@ import { Button } from "../ui/Button"
 import { Card, CardContent } from "../ui/Card"
 import { Badge } from "../ui/badge"
 import { Pagination } from "../ui/Pagination"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs"
 import { liquidacionesApi } from "../../api/liquidaciones"
 import type { Liquidacion } from "../../types"
 import { Spinner } from "../ui/spinner"
 import { useToast } from "../../hooks/use-toast"
 import { NuevaLiquidacionModal } from "./liquidaciones/NuevaLiquidacionModal"
 import { LiquidacionDetailModal } from "./liquidaciones/LiquidacionDetailModal"
+import { ComisionManager } from "./ComisionManager"
 
 export function LiquidacionesManager() {
   const [liquidaciones, setLiquidaciones] = useState<Liquidacion[]>([])
@@ -108,66 +110,79 @@ export function LiquidacionesManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border">
-        <h2 className="text-2xl font-light text-gray-800">Liquidaciones</h2>
-        <Button
-          onClick={() => setShowCreateDialog(true)}
-          variant="outline"
-          className="uppercase text-xs tracking-wider font-medium"
-        >
-          Nueva Liquidación
-        </Button>
-      </div>
+      <Tabs defaultValue="listado">
+        <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border">
+          <TabsList>
+            <TabsTrigger value="listado">Liquidaciones</TabsTrigger>
+            <TabsTrigger value="comisiones">Comisiones</TabsTrigger>
+          </TabsList>
+          <TabsContent value="listado" className="mt-0">
+            <Button
+              onClick={() => setShowCreateDialog(true)}
+              variant="outline"
+              className="uppercase text-xs tracking-wider font-medium"
+            >
+              Nueva Liquidación
+            </Button>
+          </TabsContent>
+        </div>
 
-      <Card>
-        <CardContent className="p-0">
-          {liquidaciones.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              No hay liquidaciones registradas
-            </div>
-          ) : (
-            <>
-              <div className="divide-y">
-                {paginatedLiquidaciones.map((liquidacion) => (
-                  <div
-                    key={liquidacion.id}
-                    className="p-4 hover:bg-gray-50 cursor-pointer transition-colors flex justify-between items-center group"
-                    onClick={() => handleLiquidacionClick(liquidacion.id)}
-                  >
-                    <div className="space-y-1">
-                      <p className="text-xs text-gray-500 font-light">
-                        Período: {formatDateRange(liquidacion.periodo_inicio, liquidacion.periodo_fin)}
-                      </p>
-                      <h3 className="text-lg font-normal text-gray-800 uppercase tracking-wide">
-                        {liquidacion.profesional?.apellido} {liquidacion.profesional?.nombre}
-                      </h3>
-                    </div>
+        <TabsContent value="listado">
+          <Card>
+            <CardContent className="p-0">
+              {liquidaciones.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  No hay liquidaciones registradas
+                </div>
+              ) : (
+                <>
+                  <div className="divide-y">
+                    {paginatedLiquidaciones.map((liquidacion) => (
+                      <div
+                        key={liquidacion.id}
+                        className="p-4 hover:bg-gray-50 cursor-pointer transition-colors flex justify-between items-center group"
+                        onClick={() => handleLiquidacionClick(liquidacion.id)}
+                      >
+                        <div className="space-y-1">
+                          <p className="text-xs text-gray-500 font-light">
+                            Período: {formatDateRange(liquidacion.periodo_inicio, liquidacion.periodo_fin)}
+                          </p>
+                          <h3 className="text-lg font-normal text-gray-800 uppercase tracking-wide">
+                            {liquidacion.profesional?.apellido} {liquidacion.profesional?.nombre}
+                          </h3>
+                        </div>
 
-                    <div className="flex items-center gap-6">
-                      {liquidacion.estado !== "Generada" && (
-                        <Badge variant={liquidacion.estado === "Pagada" ? "outline" : "secondary"} className="font-normal">
-                          {liquidacion.estado}
-                        </Badge>
-                      )}
+                        <div className="flex items-center gap-6">
+                          {liquidacion.estado !== "Generada" && (
+                            <Badge variant={liquidacion.estado === "Pagada" ? "outline" : "secondary"} className="font-normal">
+                              {liquidacion.estado}
+                            </Badge>
+                          )}
 
-                      <span className="text-xl font-normal text-gray-900">
-                        {formatCurrency(liquidacion.monto_profesional)}
-                      </span>
-                    </div>
+                          <span className="text-xl font-normal text-gray-900">
+                            {formatCurrency(liquidacion.monto_profesional)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-                itemsPerPage={itemsPerPage}
-                totalItems={liquidaciones.length}
-              />
-            </>
-          )}
-        </CardContent>
-      </Card>
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={liquidaciones.length}
+                  />
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="comisiones">
+          <ComisionManager />
+        </TabsContent>
+      </Tabs>
 
       <NuevaLiquidacionModal
         open={showCreateDialog}
