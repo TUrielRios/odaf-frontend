@@ -19,6 +19,7 @@ import { Trash2, Download, CheckCircle, Ban, Pencil } from "lucide-react"
 import type { Liquidacion } from "../../../types"
 import { liquidacionesApi } from "../../../api/liquidaciones"
 import { useToast } from "../../../hooks/use-toast"
+import { formatFecha } from "../../../lib/fechas"
 
 interface LiquidacionDetailModalProps {
     open: boolean
@@ -60,9 +61,8 @@ export function LiquidacionDetailModal({
 
     if (!liquidacion) return null
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString("es-AR")
-    }
+    // formatFecha evita el corrimiento de un día de las fechas DATEONLY ("YYYY-MM-DD")
+    const formatDate = (dateString: string) => formatFecha(dateString)
 
     const formatCurrency = (amount: string | number) => {
         return new Intl.NumberFormat("es-AR", {
@@ -110,9 +110,6 @@ export function LiquidacionDetailModal({
                             </p>
                             <p className="font-medium">
                                 Estado: <span className="font-normal">{liquidacion.estado}</span>
-                            </p>
-                            <p className="font-medium">
-                                Total: <span className="font-normal text-green-700">{formatCurrency(liquidacion.monto_profesional)}</span>
                             </p>
                         </div>
                         <div className="flex flex-col items-end gap-2">
@@ -190,7 +187,7 @@ export function LiquidacionDetailModal({
                                                 {prestacion.servicio?.nombre || "-"}
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                {formatCurrency(prestacion.monto_profesional)}
+                                                {formatCurrency(prestacion.monto_total)}
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -203,6 +200,39 @@ export function LiquidacionDetailModal({
                                     )}
                                 </TableBody>
                             </Table>
+                        </div>
+
+                        {/* Desglose de comisión al pie */}
+                        <div className="mt-3 border rounded-md overflow-hidden text-sm">
+                            <div className="flex justify-between items-center px-4 py-2 bg-gray-50">
+                                <span className="text-gray-600">Total generado por los servicios</span>
+                                <span className="font-semibold text-gray-800">
+                                    {formatCurrency(liquidacion.monto_total_servicios ?? 0)}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center px-4 py-2 bg-gray-50 border-t text-gray-500">
+                                <span>
+                                    × {(() => {
+                                        const pct = liquidacion.profesional?.porcentaje_comision
+                                        if (pct != null) return pct
+                                        const total = Number(liquidacion.monto_total_servicios)
+                                        const prof = Number(liquidacion.monto_profesional)
+                                        if (total > 0) return Math.round((prof / total) * 100)
+                                        return "—"
+                                    })()}% (comisión del profesional)
+                                </span>
+                                <span>
+                                    queda en clínica: {formatCurrency(
+                                        Number(liquidacion.monto_total_servicios ?? 0) - Number(liquidacion.monto_profesional ?? 0)
+                                    )}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center px-4 py-3 bg-green-50 border-t border-green-200">
+                                <span className="font-semibold text-green-800">Le corresponde al profesional</span>
+                                <span className="text-lg font-bold text-green-700">
+                                    {formatCurrency(liquidacion.monto_profesional ?? 0)}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>

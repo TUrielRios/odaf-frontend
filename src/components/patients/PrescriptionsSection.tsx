@@ -7,6 +7,7 @@ import { Button } from "../ui/Button"
 import { Plus, Edit, Trash2, Calendar, X, Pill } from "lucide-react"
 import { prescripcionesApi } from "../../api"
 import type { Prescripcion, CrearPrescripcionData } from "../../types"
+import { hoyLocal } from "../../lib/fechas"
 
 interface PrescriptionsSectionProps {
   pacienteId: string | number
@@ -39,7 +40,7 @@ export const PrescriptionsSection: React.FC<PrescriptionsSectionProps> = ({ paci
   const handleCreate = () => {
     setFormData({
       paciente_id: String(pacienteId),
-      fecha: new Date().toISOString().split("T")[0],
+      fecha: hoyLocal(),
     })
     setModalMode("create")
     setShowModal(true)

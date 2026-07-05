@@ -17,6 +17,7 @@ import { obrasSocialesApi } from "../../../api/obras-sociales"
 import type { Profesional, ObraSocial } from "../../../types"
 import { useToast } from "../../../hooks/use-toast"
 import { Spinner } from "../../ui/spinner"
+import { formatFecha } from "../../../lib/fechas"
 
 interface NuevaLiquidacionModalProps {
     open: boolean
@@ -148,7 +149,10 @@ export function NuevaLiquidacionModal({
                 periodo_inicio: simulationResult.periodo_inicio.split('T')[0],
                 periodo_fin: simulationResult.periodo_fin.split('T')[0],
                 observaciones: observaciones,
-                monto_custom: Number(simulationResult.monto_profesional)
+                monto_custom: Number(simulationResult.monto_profesional),
+                // Mismos filtros que la simulación, para liquidar exactamente lo previsualizado
+                tipo,
+                obra_social_id: tipo === "obra_social" && selectedObraSocial ? Number(selectedObraSocial) : undefined,
             }
 
             console.log("Payload to send:", payload)
@@ -310,7 +314,7 @@ export function NuevaLiquidacionModal({
                         {/* Encabezado */}
                         <div className="bg-gray-50 border rounded-md p-4 space-y-1 text-sm">
                             <p><span className="text-gray-500">Profesional:</span> <strong>{getProfesionalName()}</strong></p>
-                            <p><span className="text-gray-500">Período:</span> {new Date(simulationResult.periodo_inicio).toLocaleDateString('es-AR')} — {new Date(simulationResult.periodo_fin).toLocaleDateString('es-AR')}</p>
+                            <p><span className="text-gray-500">Período:</span> {formatFecha(simulationResult.periodo_inicio)} — {formatFecha(simulationResult.periodo_fin)}</p>
                             <p><span className="text-gray-500">Prestaciones:</span> <strong>{simulationResult.cantidad_prestaciones}</strong></p>
                         </div>
 

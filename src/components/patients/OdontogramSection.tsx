@@ -11,6 +11,7 @@ import type { Odontograma, CrearOdontogramaData } from "../../types"
 import {
   getDienteImageSrc,
 } from "../../utils/dienteImages"
+import { hoyLocal } from "../../lib/fechas"
 
 interface OdontogramSectionProps {
   pacienteId: string | number
@@ -276,7 +277,7 @@ export const OdontogramSection: React.FC<OdontogramSectionProps> = ({ pacienteId
       const dataToSend: CrearOdontogramaData = {
         paciente_id: String(pacienteId),
         profesional_id: profesionalActual,
-        fecha: new Date().toISOString().split("T")[0],
+        fecha: hoyLocal(),
         dientes_data: dientesData,
         observaciones: observaciones,
         tipo: tipo,

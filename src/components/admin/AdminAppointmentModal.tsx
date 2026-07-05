@@ -5,6 +5,7 @@ import { Plus, UserPlus, Search } from 'lucide-react'
 import { PatientForm } from '../booking/PatientForm'
 import { turnosApi, profesionalesApi, pacientesApi, serviciosApi } from '../../api'
 import type { Profesional, Paciente, Servicio } from '../../types'
+import { hoyLocal } from '../../lib/fechas'
 
 interface AdminAppointmentModalProps {
     onClose: () => void
@@ -23,7 +24,7 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
         paciente_id: '',
         profesional_id: initialData?.profesional_id || 0,
         servicio_id: 0,
-        fecha: initialData?.fecha || new Date().toISOString().split('T')[0],
+        fecha: initialData?.fecha || hoyLocal(),
         hora_inicio: initialData?.hora_inicio || '10:00',
         hora_fin: initialData?.hora_fin || '10:30',
         estado: 'Creado',

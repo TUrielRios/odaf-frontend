@@ -7,6 +7,7 @@ import { Button } from "../ui/Button"
 import { Plus, Edit, Trash2, FileText, Calendar, X } from "lucide-react"
 import { historialesClinicosApi } from "../../api"
 import type { HistorialClinico, CrearHistorialClinicoData } from "../../types"
+import { hoyLocal } from "../../lib/fechas"
 
 interface ClinicalHistorySectionProps {
   pacienteId: string | number
@@ -39,7 +40,7 @@ export const ClinicalHistorySection: React.FC<ClinicalHistorySectionProps> = ({ 
   const handleCreate = () => {
     setFormData({
       paciente_id: String(pacienteId),
-      fecha: new Date().toISOString().split("T")[0],
+      fecha: hoyLocal(),
     })
     setModalMode("create")
     setShowModal(true)

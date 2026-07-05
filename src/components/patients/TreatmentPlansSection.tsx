@@ -12,6 +12,7 @@ import { planesTratamientoApi, procedimientosApi, profesionalesApi, pacientesApi
 import type { PlanTratamiento, CrearPlanTratamientoData, TratamientoPlan, Procedimiento, Profesional, Paciente } from "../../types"
 import { dentalColors } from "../../config/colors"
 import { getDienteImageSrc, esDienteSuperior } from "../../utils/dienteImages"
+import { hoyLocal, formatFecha } from "../../lib/fechas"
 
 // ─── Constantes ────────────────────────────────────────────────────────────────
 
@@ -195,7 +196,7 @@ export const TreatmentPlansSection: React.FC<TreatmentPlansSectionProps> = ({ pa
   const [tratamientoForm, setTratamientoForm] = useState({
     procedimiento_id: 0,
     nomenclador: "",
-    fecha_inicio: new Date().toISOString().split("T")[0],
+    fecha_inicio: hoyLocal(),
     pieza_numero: "",
     pieza_superficies: {} as Record<string, string>,
   })
@@ -357,7 +358,7 @@ export const TreatmentPlansSection: React.FC<TreatmentPlansSectionProps> = ({ pa
     setTratamientoForm({
       procedimiento_id: 0,
       nomenclador: "",
-      fecha_inicio: new Date().toISOString().split("T")[0],
+      fecha_inicio: hoyLocal(),
       pieza_numero: "",
       pieza_superficies: {},
     })
@@ -518,8 +519,8 @@ export const TreatmentPlansSection: React.FC<TreatmentPlansSectionProps> = ({ pa
                       </span>
                       <Calendar className="h-4 w-4 text-gray-400" />
                       <span className="text-sm text-gray-600">
-                        {new Date(plan.fecha_inicio).toLocaleDateString("es-ES")}
-                        {plan.fecha_fin && ` - ${new Date(plan.fecha_fin).toLocaleDateString("es-ES")}`}
+                        {formatFecha(plan.fecha_inicio)}
+                        {plan.fecha_fin && ` - ${formatFecha(plan.fecha_fin)}`}
                       </span>
                       {tratamientos.length > 0 && (
                         <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
@@ -635,7 +636,7 @@ export const TreatmentPlansSection: React.FC<TreatmentPlansSectionProps> = ({ pa
                                   )}
                                 </td>
                                 <td className="px-3 py-2.5 text-gray-600">
-                                  {new Date(t.fecha_inicio).toLocaleDateString("es-ES")}
+                                  {formatFecha(t.fecha_inicio)}
                                 </td>
                                 <td className="px-3 py-2.5">
                                   <span
@@ -710,12 +711,12 @@ export const TreatmentPlansSection: React.FC<TreatmentPlansSectionProps> = ({ pa
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-gray-500">Fecha de Inicio</p>
-                    <p className="font-medium">{new Date(selectedPlan.fecha_inicio).toLocaleDateString("es-ES")}</p>
+                    <p className="font-medium">{formatFecha(selectedPlan.fecha_inicio)}</p>
                   </div>
                   {selectedPlan.fecha_fin && (
                     <div>
                       <p className="text-xs text-gray-500">Fecha de Fin</p>
-                      <p className="font-medium">{new Date(selectedPlan.fecha_fin).toLocaleDateString("es-ES")}</p>
+                      <p className="font-medium">{formatFecha(selectedPlan.fecha_fin)}</p>
                     </div>
                   )}
                 </div>

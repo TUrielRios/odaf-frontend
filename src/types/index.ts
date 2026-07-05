@@ -540,6 +540,8 @@ export interface CrearLiquidacionData {
   periodo_fin: string
   observaciones?: string
   monto_custom?: number
+  tipo?: string
+  obra_social_id?: number
 }
 
 export interface PagarLiquidacionData {

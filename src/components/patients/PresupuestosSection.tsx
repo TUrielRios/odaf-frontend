@@ -8,6 +8,7 @@ import { Plus, Edit, Trash2, FileText, Calendar, X, DollarSign, Printer, Copy } 
 import { presupuestosApi } from "../../api"
 import type { Presupuesto, PresupuestoItem, CrearPresupuestoData } from "../../types"
 import { getErrorMessage } from "../../utils/errors"
+import { hoyLocal } from "../../lib/fechas"
 
 interface PresupuestosSectionProps {
   pacienteId: string | number
@@ -24,7 +25,7 @@ export const PresupuestosSection: React.FC<PresupuestosSectionProps> = ({ pacien
   const [descripcion, setDescripcion] = useState("")
   const [estado, setEstado] = useState("Pendiente")
   const [observaciones, setObservaciones] = useState("")
-  const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0])
+  const [fecha, setFecha] = useState(hoyLocal())
   const [items, setItems] = useState<PresupuestoItem[]>([])
 
   // Item builder states
@@ -52,7 +53,7 @@ export const PresupuestosSection: React.FC<PresupuestosSectionProps> = ({ pacien
     setDescripcion("")
     setEstado("Pendiente")
     setObservaciones("")
-    setFecha(new Date().toISOString().split("T")[0])
+    setFecha(hoyLocal())
     setItems([])
     setItemDescripcion("")
     setItemCantidad(1)

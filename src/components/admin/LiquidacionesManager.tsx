@@ -14,6 +14,7 @@ import { useToast } from "../../hooks/use-toast"
 import { NuevaLiquidacionModal } from "./liquidaciones/NuevaLiquidacionModal"
 import { LiquidacionDetailModal } from "./liquidaciones/LiquidacionDetailModal"
 import { ComisionManager } from "./ComisionManager"
+import { hoyLocal, formatFecha } from "../../lib/fechas"
 
 function RecalcularMontos({ onDone }: { onDone: () => void }) {
   const { toast } = useToast()
@@ -128,7 +129,7 @@ export function LiquidacionesManager() {
     const metodo = prompt("Método de pago (ej: Transferencia, Efectivo, Cheque):")
     if (!metodo) return
 
-    const fecha = new Date().toISOString().split("T")[0]
+    const fecha = hoyLocal()
     try {
       await liquidacionesApi.pagar(id, { fecha_pago: fecha, metodo_pago: metodo })
       toast({ title: "Éxito", description: "Pago registrado correctamente" })
@@ -140,10 +141,8 @@ export function LiquidacionesManager() {
   }
 
   const formatDateRange = (start: string, end: string) => {
-    const s = new Date(start)
-    const e = new Date(end)
     const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }
-    return `${s.toLocaleDateString('es-AR', options)} - ${e.toLocaleDateString('es-AR', options)}`
+    return `${formatFecha(start, options)} - ${formatFecha(end, options)}`
   }
 
   const formatCurrency = (amount: string | number) => {
