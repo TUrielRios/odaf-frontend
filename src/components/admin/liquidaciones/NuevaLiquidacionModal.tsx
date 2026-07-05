@@ -306,55 +306,80 @@ export function NuevaLiquidacionModal({
                         </div>
                     </div>
                 ) : (
-                    <div className="py-6 space-y-6">
-                        <div className="bg-gray-50 p-4 rounded-md space-y-2">
-                            <p><strong>Profesional:</strong> {getProfesionalName()}</p>
-                            <p><strong>Período:</strong> {new Date(simulationResult.periodo_inicio).toLocaleDateString()} - {new Date(simulationResult.periodo_fin).toLocaleDateString()}</p>
-                            <p><strong>Prestaciones encontradas:</strong> {simulationResult.cantidad_prestaciones}</p>
+                    <div className="py-4 space-y-4">
+                        {/* Encabezado */}
+                        <div className="bg-gray-50 border rounded-md p-4 space-y-1 text-sm">
+                            <p><span className="text-gray-500">Profesional:</span> <strong>{getProfesionalName()}</strong></p>
+                            <p><span className="text-gray-500">Período:</span> {new Date(simulationResult.periodo_inicio).toLocaleDateString('es-AR')} — {new Date(simulationResult.periodo_fin).toLocaleDateString('es-AR')}</p>
+                            <p><span className="text-gray-500">Prestaciones:</span> <strong>{simulationResult.cantidad_prestaciones}</strong></p>
+                        </div>
 
-                            {Number(simulationResult.monto_profesional) === 0 && (
-                                <div className="bg-yellow-50 border border-yellow-400 rounded-md p-3 mt-2">
-                                    <p className="text-sm font-semibold text-yellow-800">
-                                        ⚠️ El monto calculado es $0
-                                    </p>
-                                    <p className="text-xs text-yellow-700 mt-1">
-                                        Los servicios probablemente no tienen precio configurado en el sistema.
-                                        Ingresá el monto correcto manualmente en el campo de abajo antes de confirmar.
-                                    </p>
-                                </div>
-                            )}
-
-                            <div className="pt-2 border-t mt-2">
-                                <Label className="text-sm font-medium text-gray-700">
-                                    Total a liquidar al profesional {Number(simulationResult.monto_profesional) === 0 && <span className="text-yellow-600 font-semibold">(ingresá el monto manualmente)</span>}
-                                </Label>
-                                <div className="flex items-center mt-1">
-                                    <span className="text-2xl font-bold text-green-700 mr-2">$</span>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        className="text-2xl font-bold text-green-700 bg-white border-2 border-green-400 rounded-md px-3 py-1 focus:outline-none focus:border-green-600 w-48"
-                                        value={simulationResult.monto_profesional}
-                                        onChange={(e) => setSimulationResult({ ...simulationResult, monto_profesional: e.target.value })}
-                                    />
-                                </div>
-                                <p className="text-xs text-gray-500 mt-1">Editá este valor si el monto calculado no es correcto.</p>
+                        {/* Desglose de montos */}
+                        <div className="border rounded-md overflow-hidden">
+                            {/* Total generado */}
+                            <div className="flex justify-between items-center px-4 py-3 bg-white">
+                                <span className="text-sm text-gray-600">Total generado por los servicios</span>
+                                <span className="text-base font-semibold text-gray-800">
+                                    {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(Number(simulationResult.monto_total_servicios))}
+                                </span>
                             </div>
 
-                            <div className="pt-2 mt-2">
-                                <Label className="text-sm font-medium text-gray-700 mb-1 block">Observaciones / Descripción del trabajo</Label>
-                                <textarea
-                                    className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]"
-                                    value={observaciones}
-                                    onChange={(e) => setObservaciones(e.target.value)}
-                                    placeholder="Ingrese detalles sobre la liquidación..."
-                                />
+                            {/* Porcentaje — multiplicación sobre el total */}
+                            <div className="flex justify-between items-center px-4 py-2 bg-gray-50 border-t">
+                                <span className="text-sm text-gray-500">
+                                    × {simulationResult.porcentaje_profesional ?? '—'}% (comisión del profesional)
+                                </span>
+                                <span className="text-sm text-gray-400">
+                                    queda en clínica: {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(
+                                        Number(simulationResult.monto_total_servicios) - Number(simulationResult.monto_profesional)
+                                    )}
+                                </span>
+                            </div>
+
+                            {/* Monto profesional — editable */}
+                            <div className="px-4 py-3 bg-green-50 border-t border-green-200">
+                                <div className="flex justify-between items-center">
+                                    <Label className="text-sm font-semibold text-green-800">
+                                        Le corresponde al profesional
+                                        {Number(simulationResult.monto_profesional) === 0 && (
+                                            <span className="ml-2 text-yellow-600 font-normal">(ingresá manualmente)</span>
+                                        )}
+                                    </Label>
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-xl font-bold text-green-700">$</span>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            className="text-xl font-bold text-green-700 bg-white border-2 border-green-400 rounded-md px-3 py-1 focus:outline-none focus:border-green-600 w-44 text-right"
+                                            value={simulationResult.monto_profesional}
+                                            onChange={(e) => setSimulationResult({ ...simulationResult, monto_profesional: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-xs text-green-700 mt-1">Podés editar este valor si necesitás ajustarlo.</p>
                             </div>
                         </div>
-                        <p className="text-sm text-gray-500">
-                            Revise los datos antes de confirmar. Se generará una liquidación oficial y las prestaciones se marcarán como liquidadas.
-                        </p>
+
+                        {Number(simulationResult.monto_profesional) === 0 && (
+                            <div className="bg-yellow-50 border border-yellow-400 rounded-md p-3">
+                                <p className="text-sm font-semibold text-yellow-800">⚠️ El monto calculado es $0</p>
+                                <p className="text-xs text-yellow-700 mt-1">
+                                    Los servicios probablemente no tienen precio configurado. Ingresá el monto correcto arriba antes de confirmar.
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Observaciones */}
+                        <div>
+                            <Label className="text-sm font-medium text-gray-700 mb-1 block">Observaciones</Label>
+                            <textarea
+                                className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[70px]"
+                                value={observaciones}
+                                onChange={(e) => setObservaciones(e.target.value)}
+                                placeholder="Descripción del trabajo..."
+                            />
+                        </div>
                     </div>
                 )}
 

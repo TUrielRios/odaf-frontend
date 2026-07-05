@@ -24,9 +24,13 @@ function RecalcularMontos({ onDone }: { onDone: () => void }) {
     try {
       setLoading(true)
       const result = await prestacionesApi.recalcular()
+      const partes = []
+      if (result.actualizadas > 0) partes.push(`${result.actualizadas} con precio corregido`)
+      if ((result as any).comision_corregida > 0) partes.push(`${(result as any).comision_corregida} con comisión aplicada`)
+      if (result.sin_precio_configurado > 0) partes.push(`${result.sin_precio_configurado} sin precio (ajuste manual)`)
       toast({
         title: "Recalculación completada",
-        description: `${result.actualizadas} prestaciones actualizadas. ${result.sin_precio_configurado} sin precio configurado (requieren ajuste manual).`,
+        description: partes.length > 0 ? partes.join(" · ") : "No había prestaciones para corregir.",
       })
       onDone()
     } catch (error: any) {
