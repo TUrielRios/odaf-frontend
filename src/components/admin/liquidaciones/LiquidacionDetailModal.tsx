@@ -14,23 +14,28 @@ import {
     TableHeader,
     TableRow,
 } from "../../ui/table"
-import { Trash2, Download } from "lucide-react"
+import { Trash2, Download, CheckCircle } from "lucide-react"
 import type { Liquidacion } from "../../../types"
 
 interface LiquidacionDetailModalProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     liquidacion: Liquidacion | null
-    onDelete?: (id: number) => void
+    onAnular?: (id: number) => void
+    onPagar?: (id: number) => void
     onDownload?: (id: number) => void
+    /** @deprecated use onAnular */
+    onDelete?: (id: number) => void
 }
 
 export function LiquidacionDetailModal({
     open,
     onOpenChange,
     liquidacion,
-    onDelete,
+    onAnular,
+    onPagar,
     onDownload,
+    onDelete,
 }: LiquidacionDetailModalProps) {
     if (!liquidacion) return null
 
@@ -139,24 +144,30 @@ export function LiquidacionDetailModal({
 
                 <DialogFooter className="flex justify-between items-center border-t pt-4">
                     <div>
-                        {onDelete && (
+                        {(onAnular ?? onDelete) && liquidacion.estado !== "Anulada" && liquidacion.estado !== "Pagada" && (
                             <Button
                                 variant="destructive"
                                 className="text-white hover:bg-red-700"
-                                onClick={() => onDelete(liquidacion.id)}
+                                onClick={() => (onAnular ?? onDelete)!(liquidacion.id)}
                             >
                                 <Trash2 className="w-4 h-4 mr-2" />
-                                ELIMINAR
+                                ANULAR
                             </Button>
                         )}
                     </div>
                     <div className="flex gap-2">
                         <Button variant="outline" onClick={() => onOpenChange(false)}>
-                            CANCELAR
+                            CERRAR
                         </Button>
-                        <Button onClick={() => onOpenChange(false)}>
-                            ACEPTAR
-                        </Button>
+                        {onPagar && liquidacion.estado === "Generada" && (
+                            <Button
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                onClick={() => onPagar(liquidacion.id)}
+                            >
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                REGISTRAR PAGO
+                            </Button>
+                        )}
                     </div>
                 </DialogFooter>
             </DialogContent>

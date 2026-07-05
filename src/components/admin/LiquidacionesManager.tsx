@@ -58,10 +58,11 @@ export function LiquidacionesManager() {
   }
 
   const handleAnular = async (id: number) => {
-    if (!confirm("¿Está seguro de anular esta liquidación?")) return
+    const motivo = prompt("Motivo de anulación:")
+    if (!motivo) return
 
     try {
-      await liquidacionesApi.anular(id)
+      await liquidacionesApi.anular(id, motivo)
       toast({
         title: "Éxito",
         description: "Liquidación anulada correctamente",
@@ -73,6 +74,28 @@ export function LiquidacionesManager() {
         variant: "destructive",
         title: "Error",
         description: error.message || "No se pudo anular la liquidación",
+      })
+    }
+  }
+
+  const handlePagar = async (id: number) => {
+    const metodo = prompt("Método de pago (ej: Transferencia, Efectivo, Cheque):")
+    if (!metodo) return
+
+    const fecha = new Date().toISOString().split("T")[0]
+    try {
+      await liquidacionesApi.pagar(id, { fecha_pago: fecha, metodo_pago: metodo })
+      toast({
+        title: "Éxito",
+        description: "Pago registrado correctamente",
+      })
+      setSelectedLiquidacion(null)
+      cargarDatos()
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "No se pudo registrar el pago",
       })
     }
   }
@@ -194,7 +217,8 @@ export function LiquidacionesManager() {
         open={!!selectedLiquidacion}
         onOpenChange={(open) => !open && setSelectedLiquidacion(null)}
         liquidacion={selectedLiquidacion}
-        onDelete={handleAnular}
+        onAnular={handleAnular}
+        onPagar={handlePagar}
         onDownload={(id) => console.log("Download", id)}
       />
     </div>

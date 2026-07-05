@@ -38,6 +38,16 @@ const DIENTES_INFERIORES = [
   "3.1", "3.2", "3.3", "3.4", "3.5", "3.6", "3.7", "3.8",
 ]
 
+const DIENTES_TEMPORARIOS_SUPERIORES = [
+  "5.5", "5.4", "5.3", "5.2", "5.1",
+  "6.1", "6.2", "6.3", "6.4", "6.5",
+]
+
+const DIENTES_TEMPORARIOS_INFERIORES = [
+  "8.5", "8.4", "8.3", "8.2", "8.1",
+  "7.1", "7.2", "7.3", "7.4", "7.5",
+]
+
 const SUPERFICIES = ["oclusal", "vestibular", "lingual", "mesial", "distal"] as const
 
 const ESTADOS_TRATAMIENTO = [
@@ -890,6 +900,16 @@ export const TreatmentPlansSection: React.FC<TreatmentPlansSectionProps> = ({ pa
                       </optgroup>
                       <optgroup label="Maxilar Inferior">
                         {DIENTES_INFERIORES.map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Temporarios Superiores">
+                        {DIENTES_TEMPORARIOS_SUPERIORES.map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Temporarios Inferiores">
+                        {DIENTES_TEMPORARIOS_INFERIORES.map((d) => (
                           <option key={d} value={d}>{d}</option>
                         ))}
                       </optgroup>

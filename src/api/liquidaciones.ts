@@ -50,11 +50,11 @@ export const liquidacionesApi = {
   },
 
   async pagar(id: number, data: PagarLiquidacionData): Promise<Liquidacion> {
-    return apiClient.post<Liquidacion>(`/liquidaciones/${id}/pagar`, data)
+    return apiClient.put<Liquidacion>(`/liquidaciones/${id}/pagar`, data)
   },
 
-  async anular(id: number): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`/liquidaciones/${id}/anular`, {})
+  async anular(id: number, motivo: string): Promise<{ message: string }> {
+    return apiClient.put<{ message: string }>(`/liquidaciones/${id}/anular`, { motivo })
   },
 
   async obtenerResumen(profesionalId: number, params?: { fecha_desde?: string; fecha_hasta?: string }): Promise<{
