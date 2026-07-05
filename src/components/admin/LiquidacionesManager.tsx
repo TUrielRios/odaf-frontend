@@ -7,12 +7,49 @@ import { Badge } from "../ui/badge"
 import { Pagination } from "../ui/Pagination"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs"
 import { liquidacionesApi } from "../../api/liquidaciones"
+import { prestacionesApi } from "../../api/prestaciones"
 import type { Liquidacion } from "../../types"
 import { Spinner } from "../ui/spinner"
 import { useToast } from "../../hooks/use-toast"
 import { NuevaLiquidacionModal } from "./liquidaciones/NuevaLiquidacionModal"
 import { LiquidacionDetailModal } from "./liquidaciones/LiquidacionDetailModal"
 import { ComisionManager } from "./ComisionManager"
+
+function RecalcularMontos({ onDone }: { onDone: () => void }) {
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+
+  const handleRecalcular = async () => {
+    if (!confirm("Esto va a recalcular los montos de TODAS las prestaciones pendientes que estén en $0. ¿Continuar?")) return
+    try {
+      setLoading(true)
+      const result = await prestacionesApi.recalcular()
+      toast({
+        title: "Recalculación completada",
+        description: `${result.actualizadas} prestaciones actualizadas. ${result.sin_precio_configurado} sin precio configurado (requieren ajuste manual).`,
+      })
+      onDone()
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message || "No se pudo recalcular" })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="mt-6 border border-yellow-200 bg-yellow-50 rounded-lg p-4">
+      <h3 className="font-medium text-yellow-800 mb-1">Prestaciones con monto $0</h3>
+      <p className="text-sm text-yellow-700 mb-3">
+        Si hay prestaciones con importe $0, este botón intenta recalcularlas usando los precios del plan de tratamiento
+        o del servicio configurado. Las que vengan de <strong>turnos</strong> necesitan que el servicio tenga un precio
+        cargado en la sección Servicios.
+      </p>
+      <Button variant="outline" onClick={handleRecalcular} disabled={loading}>
+        {loading ? "Recalculando..." : "Recalcular prestaciones con $0"}
+      </Button>
+    </div>
+  )
+}
 
 export function LiquidacionesManager() {
   const [liquidaciones, setLiquidaciones] = useState<Liquidacion[]>([])
@@ -58,23 +95,28 @@ export function LiquidacionesManager() {
   }
 
   const handleAnular = async (id: number) => {
-    const motivo = prompt("Motivo de anulación:")
-    if (!motivo) return
+    if (!confirm("¿Está seguro de que desea anular esta liquidación? Esta acción no se puede deshacer.")) return
 
     try {
-      await liquidacionesApi.anular(id, motivo)
-      toast({
-        title: "Éxito",
-        description: "Liquidación anulada correctamente",
-      })
+      await liquidacionesApi.anular(id, "Anulada manualmente por el administrador")
+      toast({ title: "Éxito", description: "Liquidación anulada correctamente" })
       setSelectedLiquidacion(null)
       cargarDatos()
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "No se pudo anular la liquidación",
-      })
+      toast({ variant: "destructive", title: "Error", description: error.message || "No se pudo anular la liquidación" })
+    }
+  }
+
+  const handleEliminar = async (id: number) => {
+    if (!confirm("¿Está seguro de que desea ELIMINAR esta liquidación? Se borrará permanentemente.")) return
+
+    try {
+      await liquidacionesApi.eliminar(id)
+      toast({ title: "Éxito", description: "Liquidación eliminada correctamente" })
+      setSelectedLiquidacion(null)
+      cargarDatos()
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Error", description: error.message || "No se pudo eliminar la liquidación" })
     }
   }
 
@@ -85,18 +127,11 @@ export function LiquidacionesManager() {
     const fecha = new Date().toISOString().split("T")[0]
     try {
       await liquidacionesApi.pagar(id, { fecha_pago: fecha, metodo_pago: metodo })
-      toast({
-        title: "Éxito",
-        description: "Pago registrado correctamente",
-      })
+      toast({ title: "Éxito", description: "Pago registrado correctamente" })
       setSelectedLiquidacion(null)
       cargarDatos()
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "No se pudo registrar el pago",
-      })
+      toast({ variant: "destructive", title: "Error", description: error.message || "No se pudo registrar el pago" })
     }
   }
 
@@ -204,6 +239,7 @@ export function LiquidacionesManager() {
 
         <TabsContent value="comisiones">
           <ComisionManager />
+          <RecalcularMontos onDone={cargarDatos} />
         </TabsContent>
       </Tabs>
 
@@ -218,7 +254,9 @@ export function LiquidacionesManager() {
         onOpenChange={(open) => !open && setSelectedLiquidacion(null)}
         liquidacion={selectedLiquidacion}
         onAnular={handleAnular}
+        onEliminar={handleEliminar}
         onPagar={handlePagar}
+        onUpdate={cargarDatos}
         onDownload={(id) => console.log("Download", id)}
       />
     </div>

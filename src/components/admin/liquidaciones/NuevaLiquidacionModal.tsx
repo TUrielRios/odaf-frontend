@@ -310,21 +310,36 @@ export function NuevaLiquidacionModal({
                         <div className="bg-gray-50 p-4 rounded-md space-y-2">
                             <p><strong>Profesional:</strong> {getProfesionalName()}</p>
                             <p><strong>Período:</strong> {new Date(simulationResult.periodo_inicio).toLocaleDateString()} - {new Date(simulationResult.periodo_fin).toLocaleDateString()}</p>
-                            <p><strong>Cantidad de prestaciones:</strong> {simulationResult.cantidad_prestaciones}</p>
+                            <p><strong>Prestaciones encontradas:</strong> {simulationResult.cantidad_prestaciones}</p>
+
+                            {Number(simulationResult.monto_profesional) === 0 && (
+                                <div className="bg-yellow-50 border border-yellow-400 rounded-md p-3 mt-2">
+                                    <p className="text-sm font-semibold text-yellow-800">
+                                        ⚠️ El monto calculado es $0
+                                    </p>
+                                    <p className="text-xs text-yellow-700 mt-1">
+                                        Los servicios probablemente no tienen precio configurado en el sistema.
+                                        Ingresá el monto correcto manualmente en el campo de abajo antes de confirmar.
+                                    </p>
+                                </div>
+                            )}
 
                             <div className="pt-2 border-t mt-2">
-                                <Label className="text-sm font-medium text-gray-700">Total a liquidar</Label>
+                                <Label className="text-sm font-medium text-gray-700">
+                                    Total a liquidar al profesional {Number(simulationResult.monto_profesional) === 0 && <span className="text-yellow-600 font-semibold">(ingresá el monto manualmente)</span>}
+                                </Label>
                                 <div className="flex items-center mt-1">
-                                    <span className="text-lg font-bold text-green-600 mr-2">$</span>
+                                    <span className="text-2xl font-bold text-green-700 mr-2">$</span>
                                     <input
                                         type="number"
                                         step="0.01"
-                                        className="text-lg font-bold text-green-600 bg-transparent border-b border-green-300 focus:outline-none focus:border-green-600 w-32"
+                                        min="0"
+                                        className="text-2xl font-bold text-green-700 bg-white border-2 border-green-400 rounded-md px-3 py-1 focus:outline-none focus:border-green-600 w-48"
                                         value={simulationResult.monto_profesional}
                                         onChange={(e) => setSimulationResult({ ...simulationResult, monto_profesional: e.target.value })}
                                     />
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">Puede modificar este monto si es necesario.</p>
+                                <p className="text-xs text-gray-500 mt-1">Editá este valor si el monto calculado no es correcto.</p>
                             </div>
 
                             <div className="pt-2 mt-2">

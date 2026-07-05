@@ -22,7 +22,7 @@ export const Button: React.FC<ButtonProps> = ({
     primary: `bg-[${dentalColors.primary}] text-white hover:bg-[${dentalColors.primaryDark}] focus:ring-[${dentalColors.primary}]`,
     secondary: `bg-[${dentalColors.gray200}] text-[${dentalColors.gray800}] hover:bg-[${dentalColors.gray300}] focus:ring-[${dentalColors.gray400}]`,
     outline: `border-2 border-[${dentalColors.primary}] text-[${dentalColors.primary}] hover:bg-[${dentalColors.primary}] hover:text-white focus:ring-[${dentalColors.primary}]`,
-    destructive: `bg-[${dentalColors.error}] text-white hover:bg-red-700 focus:ring-red-500`,
+    destructive: `bg-red-500 text-white hover:bg-red-700 focus:ring-red-500`,
     ghost: `bg-transparent text-[${dentalColors.gray700}] hover:bg-[${dentalColors.gray100}] focus:ring-[${dentalColors.gray400}]`
   }
 

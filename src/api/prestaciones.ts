@@ -60,4 +60,8 @@ export const prestacionesApi = {
       pagination: response.pagination,
     }
   },
+
+  async recalcular(): Promise<{ message: string; total_revisadas: number; actualizadas: number; sin_precio_configurado: number }> {
+    return apiClient.post("/prestaciones/recalcular", {})
+  },
 }

@@ -1,11 +1,12 @@
+import { useState, useEffect } from "react"
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogFooter,
 } from "../../ui/dialog"
 import { Button } from "../../ui/Button"
+import { Label } from "../../ui/label"
 import {
     Table,
     TableBody,
@@ -14,16 +15,20 @@ import {
     TableHeader,
     TableRow,
 } from "../../ui/table"
-import { Trash2, Download, CheckCircle } from "lucide-react"
+import { Trash2, Download, CheckCircle, Ban, Pencil } from "lucide-react"
 import type { Liquidacion } from "../../../types"
+import { liquidacionesApi } from "../../../api/liquidaciones"
+import { useToast } from "../../../hooks/use-toast"
 
 interface LiquidacionDetailModalProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     liquidacion: Liquidacion | null
     onAnular?: (id: number) => void
+    onEliminar?: (id: number) => void
     onPagar?: (id: number) => void
     onDownload?: (id: number) => void
+    onUpdate?: () => void
     /** @deprecated use onAnular */
     onDelete?: (id: number) => void
 }
@@ -33,10 +38,26 @@ export function LiquidacionDetailModal({
     onOpenChange,
     liquidacion,
     onAnular,
+    onEliminar,
     onPagar,
     onDownload,
+    onUpdate,
     onDelete,
 }: LiquidacionDetailModalProps) {
+    const { toast } = useToast()
+    const [isEditing, setIsEditing] = useState(false)
+    const [editMonto, setEditMonto] = useState("")
+    const [editObservaciones, setEditObservaciones] = useState("")
+    const [saving, setSaving] = useState(false)
+
+    useEffect(() => {
+        if (liquidacion) {
+            setEditMonto(liquidacion.monto_profesional?.toString() ?? "")
+            setEditObservaciones(liquidacion.observaciones ?? "")
+            setIsEditing(false)
+        }
+    }, [liquidacion])
+
     if (!liquidacion) return null
 
     const formatDate = (dateString: string) => {
@@ -50,17 +71,36 @@ export function LiquidacionDetailModal({
         }).format(Number(amount))
     }
 
+    const handleGuardar = async () => {
+        try {
+            setSaving(true)
+            await liquidacionesApi.actualizar(liquidacion.id, {
+                monto_profesional: Number(editMonto),
+                observaciones: editObservaciones,
+            } as any)
+            toast({ title: "Éxito", description: "Liquidación actualizada correctamente" })
+            setIsEditing(false)
+            onUpdate?.()
+            onOpenChange(false)
+        } catch (error: any) {
+            toast({ variant: "destructive", title: "Error", description: error.message || "No se pudo guardar" })
+        } finally {
+            setSaving(false)
+        }
+    }
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white">
-                <DialogHeader className="flex flex-row items-center justify-between border-b pb-4">
+            {/* flex flex-col + overflow-hidden para que el footer quede fijo abajo */}
+            <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden bg-white">
+                <DialogHeader className="flex-shrink-0 flex flex-row items-center justify-between border-b pb-4">
                     <DialogTitle className="text-xl font-normal">Liquidación</DialogTitle>
-                    {/* Close button is handled by DialogContent usually, but if we need custom one */}
                 </DialogHeader>
 
-                <div className="py-4 space-y-6">
+                {/* Área scrollable */}
+                <div className="flex-1 overflow-y-auto py-4 space-y-6 pr-1">
                     {/* Header Info */}
-                    <div className="flex justify-between items-start">
+                    <div className="flex flex-wrap justify-between items-start gap-4">
                         <div className="space-y-1">
                             <p className="font-medium">
                                 Miembro: <span className="font-normal uppercase">{liquidacion.profesional?.nombre} {liquidacion.profesional?.apellido}</span>
@@ -68,9 +108,14 @@ export function LiquidacionDetailModal({
                             <p className="font-medium">
                                 Período: <span className="font-normal">{formatDate(liquidacion.periodo_inicio)} - {formatDate(liquidacion.periodo_fin)}</span>
                             </p>
+                            <p className="font-medium">
+                                Estado: <span className="font-normal">{liquidacion.estado}</span>
+                            </p>
+                            <p className="font-medium">
+                                Total: <span className="font-normal text-green-700">{formatCurrency(liquidacion.monto_profesional)}</span>
+                            </p>
                         </div>
                         <div className="flex flex-col items-end gap-2">
-                            {/* Placeholder for payment method if needed */}
                             <div className="text-sm text-gray-500">
                                 Forma de pago: {liquidacion.metodo_pago || "Pendiente"}
                             </div>
@@ -83,25 +128,50 @@ export function LiquidacionDetailModal({
                         </div>
                     </div>
 
-                    {/* Observaciones */}
-                    {liquidacion.observaciones && (
+                    {/* Formulario de edición */}
+                    {isEditing && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-md p-4 space-y-3">
+                            <h4 className="font-medium text-blue-800">Editar liquidación</h4>
+                            <div>
+                                <Label className="text-sm text-gray-700">Monto al profesional ($)</Label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    className="mt-1 w-48 px-3 py-2 text-lg font-bold border-2 border-blue-400 rounded-md focus:outline-none focus:border-blue-600"
+                                    value={editMonto}
+                                    onChange={(e) => setEditMonto(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <Label className="text-sm text-gray-700">Observaciones</Label>
+                                <textarea
+                                    className="mt-1 w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]"
+                                    value={editObservaciones}
+                                    onChange={(e) => setEditObservaciones(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Observaciones (modo lectura) */}
+                    {!isEditing && liquidacion.observaciones && (
                         <div className="bg-gray-50 p-3 rounded-md text-sm border">
                             <span className="font-medium block mb-1">Observaciones / Descripción:</span>
                             {liquidacion.observaciones}
                         </div>
                     )}
 
-                    {/* Table */}
+                    {/* Tabla */}
                     <div>
                         <h3 className="text-lg font-medium mb-4">Detalle de la liquidación</h3>
-                        <div className="border rounded-md">
+                        <div className="border rounded-md overflow-x-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-gray-50">
                                         <TableHead>Fecha</TableHead>
                                         <TableHead>Tipo</TableHead>
                                         <TableHead>Paciente</TableHead>
-                                        <TableHead>Etiquetas</TableHead>
                                         <TableHead>Trabajo</TableHead>
                                         <TableHead className="text-right">Importe ARS ($)</TableHead>
                                     </TableRow>
@@ -111,18 +181,13 @@ export function LiquidacionDetailModal({
                                         <TableRow key={prestacion.id}>
                                             <TableCell>{formatDate(prestacion.fecha)}</TableCell>
                                             <TableCell>
-                                                {/* Logic to determine type, e.g. Obra Social or Particular */}
                                                 {prestacion.paciente?.obraSocial ? "Obra social" : "Particular"}
                                             </TableCell>
                                             <TableCell className="uppercase">
                                                 {prestacion.paciente?.apellido} {prestacion.paciente?.nombre}
                                             </TableCell>
                                             <TableCell>
-                                                {/* Placeholder for tags */}
-                                                -
-                                            </TableCell>
-                                            <TableCell>
-                                                {liquidacion.observaciones || prestacion.servicio?.nombre}
+                                                {prestacion.servicio?.nombre || "-"}
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 {formatCurrency(prestacion.monto_profesional)}
@@ -131,7 +196,7 @@ export function LiquidacionDetailModal({
                                     ))}
                                     {(!liquidacion.prestaciones || liquidacion.prestaciones.length === 0) && (
                                         <TableRow>
-                                            <TableCell colSpan={6} className="text-center py-4 text-gray-500">
+                                            <TableCell colSpan={5} className="text-center py-4 text-gray-500">
                                                 No hay detalles disponibles
                                             </TableCell>
                                         </TableRow>
@@ -142,34 +207,74 @@ export function LiquidacionDetailModal({
                     </div>
                 </div>
 
-                <DialogFooter className="flex justify-between items-center border-t pt-4">
-                    <div>
-                        {(onAnular ?? onDelete) && liquidacion.estado !== "Anulada" && liquidacion.estado !== "Pagada" && (
-                            <Button
-                                variant="destructive"
-                                className="text-white hover:bg-red-700"
-                                onClick={() => (onAnular ?? onDelete)!(liquidacion.id)}
-                            >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                ANULAR
+                {/* Footer fijo — no scrollea */}
+                <div className="flex-shrink-0 border-t pt-4 flex flex-wrap gap-2 justify-between items-center">
+                    {isEditing ? (
+                        <>
+                            <Button variant="outline" onClick={() => setIsEditing(false)} disabled={saving}>
+                                CANCELAR
                             </Button>
-                        )}
-                    </div>
-                    <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => onOpenChange(false)}>
-                            CERRAR
-                        </Button>
-                        {onPagar && liquidacion.estado === "Generada" && (
                             <Button
-                                className="bg-green-600 hover:bg-green-700 text-white"
-                                onClick={() => onPagar(liquidacion.id)}
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                onClick={handleGuardar}
+                                disabled={saving}
                             >
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                REGISTRAR PAGO
+                                {saving ? "GUARDANDO..." : "GUARDAR CAMBIOS"}
                             </Button>
-                        )}
-                    </div>
-                </DialogFooter>
+                        </>
+                    ) : (
+                        <>
+                            {/* Botones izquierda: acciones destructivas */}
+                            <div className="flex flex-wrap gap-2">
+                                {liquidacion.estado === "Generada" && (
+                                    <Button
+                                        variant="outline"
+                                        className="border-blue-400 text-blue-600 hover:bg-blue-50"
+                                        onClick={() => setIsEditing(true)}
+                                    >
+                                        <Pencil className="w-4 h-4 mr-2" />
+                                        EDITAR
+                                    </Button>
+                                )}
+                                {(onAnular ?? onDelete) && liquidacion.estado !== "Anulada" && liquidacion.estado !== "Pagada" && (
+                                    <Button
+                                        variant="outline"
+                                        className="border-orange-400 text-orange-600 hover:bg-orange-50"
+                                        onClick={() => (onAnular ?? onDelete)!(liquidacion.id)}
+                                    >
+                                        <Ban className="w-4 h-4 mr-2" />
+                                        ANULAR
+                                    </Button>
+                                )}
+                                {onEliminar && liquidacion.estado !== "Pagada" && (
+                                    <Button
+                                        variant="destructive"
+                                        onClick={() => onEliminar(liquidacion.id)}
+                                    >
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        ELIMINAR
+                                    </Button>
+                                )}
+                            </div>
+
+                            {/* Botones derecha: cerrar + pagar */}
+                            <div className="flex flex-wrap gap-2">
+                                <Button variant="outline" onClick={() => onOpenChange(false)}>
+                                    CERRAR
+                                </Button>
+                                {onPagar && liquidacion.estado === "Generada" && (
+                                    <Button
+                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                        onClick={() => onPagar(liquidacion.id)}
+                                    >
+                                        <CheckCircle className="w-4 h-4 mr-2" />
+                                        REGISTRAR PAGO
+                                    </Button>
+                                )}
+                            </div>
+                        </>
+                    )}
+                </div>
             </DialogContent>
         </Dialog>
     )
