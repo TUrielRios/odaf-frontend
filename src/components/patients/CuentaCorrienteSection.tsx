@@ -187,26 +187,26 @@ export const CuentaCorrienteSection: React.FC<CuentaCorrienteSectionProps> = ({ 
                             ) : (
                                 movements.map((mov) => (
                                     <tr key={mov.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 align-top">
                                             {formatMovementDate(mov.fecha)}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-6 py-4 whitespace-nowrap align-top">
                                             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${mov.tipo === 'Ingreso' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                                                 }`}>
                                                 {mov.tipo}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                                        <td className="px-6 py-4 text-sm text-gray-500 min-w-[200px] max-w-md whitespace-normal break-words align-top">
                                             {mov.descripcion || '-'}
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">
+                                        <td className="px-6 py-4 text-sm text-gray-500 align-top">
                                             {mov.forma_pago || '-'}
                                         </td>
-                                        <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-medium ${mov.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600'
+                                        <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-medium align-top ${mov.tipo === 'Ingreso' ? 'text-green-600' : 'text-red-600'
                                             }`}>
                                             {mov.tipo === 'Ingreso' ? '+' : '-'}{formatCurrency(mov.monto)}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium align-top">
                                             <button onClick={() => handleDelete(mov.id)} className="text-red-600 hover:text-red-900">
                                                 <Trash2 className="h-4 w-4" />
                                             </button>
