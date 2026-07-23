@@ -10,10 +10,13 @@ export const recordatoriosApi = {
   async preview(data: { turno_id?: number; custom_template?: string }): Promise<{ html: string }> {
     return apiClient.post("/recordatorios/preview", data)
   },
-  async obtenerTemplate(): Promise<{ template: string }> {
-    return apiClient.get("/recordatorios/template")
+  async obtenerTemplate(canal: 'email' | 'whatsapp' = 'email'): Promise<{ template: string }> {
+    return apiClient.get(`/recordatorios/template?canal=${canal}`)
   },
-  async guardarTemplate(template: string): Promise<{ message: string; template: string }> {
-    return apiClient.put("/recordatorios/template", { template })
+  async guardarTemplate(
+    template: string,
+    canal: 'email' | 'whatsapp' = 'email',
+  ): Promise<{ message: string; template: string }> {
+    return apiClient.put("/recordatorios/template", { template, canal })
   },
 }

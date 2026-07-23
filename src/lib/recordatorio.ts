@@ -51,11 +51,11 @@ const reemplazarVariables = (template: string, turno: Turno) => {
 }
 
 /**
- * Arma el mensaje completo de WhatsApp del recordatorio.
- * Si hay un template personalizado, reemplaza sus variables; si no, usa el
- * formato predeterminado con los datos del turno.
+ * Mensaje de WhatsApp por defecto cuando no hay un template configurado.
+ * Se mantiene idéntico al formato histórico. Es también la plantilla base que se
+ * ofrece como ejemplo en el editor del default (ver WHATSAPP_TEMPLATE_EJEMPLO).
  */
-export const formatWhatsAppMessage = (turno: Turno, customTemplate?: string) => {
+const mensajeWhatsAppPorDefecto = (turno: Turno) => {
   const pacienteNombre = `${turno.paciente?.nombre || ""} ${turno.paciente?.apellido || ""}`.trim()
   const profesionalNombre = turno.profesional
     ? `${turno.profesional.nombre} ${turno.profesional.apellido}`
@@ -64,12 +64,40 @@ export const formatWhatsAppMessage = (turno: Turno, customTemplate?: string) => 
   const fechaFormateada = fechaLargaAR(turno.fecha)
   const hora = `${turno.hora_inicio} hs`
 
-  if (customTemplate) {
-    const msg = reemplazarVariables(customTemplate, turno)
-    return `Hola ${turno.paciente?.nombre || ""}! ⏰ Recordatorio de tu turno:\n\n${msg}\n\n📍 ODAF - Centro Odontológico\nTel:7711-5716\nWhatsaap 1140483693\n2 de Mayo 2930 Lanus Oeste`
+  return `Hola ${pacienteNombre}! ⏰ Te recordamos que tenés un turno programado:\n\n━━━━━━━━━━━━━━━\n🏥 *Servicio:* ${servicioNombre}\n👨‍⚕️ *Profesional:* ${profesionalNombre}\n📅 *Fecha:* ${fechaFormateada}\n🕐 *Horario:* ${hora}\n━━━━━━━━━━━━━━━\n\nPor favor, confirmá tu asistencia respondiendo a este mensaje. \n\n¡Te esperamos!\nTel:7711-5716\nWhatsaap 1140483693\n2 de Mayo 2930 Lanus Oeste`
+}
+
+/**
+ * Plantilla de ejemplo (con variables) para precargar el editor del mensaje
+ * default de WhatsApp. Equivale al mensaje por defecto, pero editable.
+ */
+export const WHATSAPP_TEMPLATE_EJEMPLO = `Hola {nombre}! ⏰ Te recordamos que tenés un turno programado:
+
+━━━━━━━━━━━━━━━
+🏥 *Servicio:* {servicio}
+👨‍⚕️ *Profesional:* {profesional}
+📅 *Fecha:* {fecha}
+🕐 *Horario:* {hora_inicio} hs
+━━━━━━━━━━━━━━━
+
+Por favor, confirmá tu asistencia respondiendo a este mensaje.
+
+¡Te esperamos!
+Tel:7711-5716
+Whatsaap 1140483693
+2 de Mayo 2930 Lanus Oeste`
+
+/**
+ * Arma el mensaje completo de WhatsApp del recordatorio.
+ * Si hay un template configurado, ese texto ES el mensaje completo (solo se
+ * reemplazan las variables). Si no, usa el formato predeterminado.
+ */
+export const formatWhatsAppMessage = (turno: Turno, customTemplate?: string) => {
+  if (customTemplate && customTemplate.trim()) {
+    return reemplazarVariables(customTemplate, turno)
   }
 
-  return `Hola ${pacienteNombre}! ⏰ Te recordamos que tenés un turno programado:\n\n━━━━━━━━━━━━━━━\n🏥 *Servicio:* ${servicioNombre}\n👨‍⚕️ *Profesional:* ${profesionalNombre}\n📅 *Fecha:* ${fechaFormateada}\n🕐 *Horario:* ${hora}\n━━━━━━━━━━━━━━━\n\nPor favor, confirmá tu asistencia respondiendo a este mensaje. \n\n¡Te esperamos!\nTel:7711-5716\nWhatsaap 1140483693\n2 de Mayo 2930 Lanus Oeste`
+  return mensajeWhatsAppPorDefecto(turno)
 }
 
 /**

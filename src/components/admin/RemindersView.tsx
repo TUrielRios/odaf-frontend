@@ -20,10 +20,11 @@ import {
   Save,
   X,
   Info,
+  MessageCircle,
 } from 'lucide-react'
 import { turnosApi, recordatoriosApi } from '../../api'
 import type { Turno } from '../../types'
-import { cleanPhone, formatWhatsAppMessage, getInitialEmailText } from '../../lib/recordatorio'
+import { cleanPhone, formatWhatsAppMessage, getInitialEmailText, WHATSAPP_TEMPLATE_EJEMPLO } from '../../lib/recordatorio'
 
 export const RemindersView: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -42,10 +43,15 @@ export const RemindersView: React.FC = () => {
 
   // Template editor
   const [showTemplateEditor, setShowTemplateEditor] = useState(false)
+  const [configTab, setConfigTab] = useState<'email' | 'whatsapp'>('email')
   const [templateText, setTemplateText] = useState('')
   const [savedTemplate, setSavedTemplate] = useState('')
   const [savingTemplate, setSavingTemplate] = useState(false)
   const [templateLoaded, setTemplateLoaded] = useState(false)
+  // WhatsApp default template (mensaje completo, separado del de email)
+  const [whatsappTemplateText, setWhatsappTemplateText] = useState('')
+  const [savedWhatsappTemplate, setSavedWhatsappTemplate] = useState('')
+  const [savingWhatsappTemplate, setSavingWhatsappTemplate] = useState(false)
 
   // Preview modal
   const [showPreview, setShowPreview] = useState(false)
@@ -123,9 +129,14 @@ export const RemindersView: React.FC = () => {
 
   const loadTemplate = async () => {
     try {
-      const result = await recordatoriosApi.obtenerTemplate()
-      setTemplateText(result.template || '')
-      setSavedTemplate(result.template || '')
+      const [email, whatsapp] = await Promise.all([
+        recordatoriosApi.obtenerTemplate('email'),
+        recordatoriosApi.obtenerTemplate('whatsapp'),
+      ])
+      setTemplateText(email.template || '')
+      setSavedTemplate(email.template || '')
+      setWhatsappTemplateText(whatsapp.template || '')
+      setSavedWhatsappTemplate(whatsapp.template || '')
       setTemplateLoaded(true)
     } catch (error) {
       console.error('Error loading template:', error)
@@ -209,14 +220,28 @@ export const RemindersView: React.FC = () => {
   const handleSaveTemplate = async () => {
     try {
       setSavingTemplate(true)
-      await recordatoriosApi.guardarTemplate(templateText)
+      await recordatoriosApi.guardarTemplate(templateText, 'email')
       setSavedTemplate(templateText)
-      alert('Mensaje guardado correctamente')
+      alert('Mensaje de email guardado correctamente')
     } catch (error) {
       console.error('Error saving template:', error)
       alert('Error al guardar el mensaje')
     } finally {
       setSavingTemplate(false)
+    }
+  }
+
+  const handleSaveWhatsappTemplate = async () => {
+    try {
+      setSavingWhatsappTemplate(true)
+      await recordatoriosApi.guardarTemplate(whatsappTemplateText, 'whatsapp')
+      setSavedWhatsappTemplate(whatsappTemplateText)
+      alert('Mensaje de WhatsApp guardado correctamente')
+    } catch (error) {
+      console.error('Error saving whatsapp template:', error)
+      alert('Error al guardar el mensaje')
+    } finally {
+      setSavingWhatsappTemplate(false)
     }
   }
 
@@ -265,6 +290,7 @@ export const RemindersView: React.FC = () => {
   const turnosWithEmail = filteredTurnos.filter(t => t.paciente?.email)
   const turnosWithoutEmail = filteredTurnos.filter(t => !t.paciente?.email)
   const templateChanged = templateText !== savedTemplate
+  const whatsappTemplateChanged = whatsappTemplateText !== savedWhatsappTemplate
 
   return (
     <div className="space-y-6">
@@ -303,8 +329,8 @@ export const RemindersView: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Mail className="h-5 w-5 text-[#026498]" />
-                Mensaje personalizado del recordatorio
+                <Settings className="h-5 w-5 text-[#026498]" />
+                Configurar mensaje por defecto del recordatorio
               </h3>
               <button
                 onClick={() => setShowTemplateEditor(false)}
@@ -314,6 +340,30 @@ export const RemindersView: React.FC = () => {
               </button>
             </div>
 
+            {/* Selector de canal */}
+            <div className="inline-flex items-center bg-gray-100 rounded-xl p-1 gap-1">
+              <button
+                onClick={() => setConfigTab('email')}
+                className={`inline-flex items-center gap-1.5 px-4 h-9 rounded-lg text-xs font-bold transition-all ${
+                  configTab === 'email' ? 'bg-white text-[#026498] shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Mail className="h-4 w-4" />
+                Email
+              </button>
+              <button
+                onClick={() => setConfigTab('whatsapp')}
+                className={`inline-flex items-center gap-1.5 px-4 h-9 rounded-lg text-xs font-bold transition-all ${
+                  configTab === 'whatsapp' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <MessageCircle className="h-4 w-4" />
+                WhatsApp
+              </button>
+            </div>
+
+            {configTab === 'email' ? (
+            <>
             <div className="bg-white border border-blue-100 rounded-lg p-4">
               <div className="flex items-start gap-2 mb-3 text-sm text-blue-700 bg-blue-50 p-3 rounded-lg">
                 <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
@@ -384,6 +434,80 @@ export const RemindersView: React.FC = () => {
                 </Button>
               </div>
             </div>
+            </>
+            ) : (
+            <>
+            <div className="bg-white border border-emerald-100 rounded-lg p-4">
+              <div className="flex items-start gap-2 mb-3 text-sm text-emerald-700 bg-emerald-50 p-3 rounded-lg">
+                <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium mb-1">Variables disponibles (se reemplazan automáticamente):</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 text-xs font-mono">
+                    <span className="bg-emerald-100 px-2 py-0.5 rounded">{'{nombre}'}</span>
+                    <span className="bg-emerald-100 px-2 py-0.5 rounded">{'{apellido}'}</span>
+                    <span className="bg-emerald-100 px-2 py-0.5 rounded">{'{fecha}'}</span>
+                    <span className="bg-emerald-100 px-2 py-0.5 rounded">{'{hora_inicio}'}</span>
+                    <span className="bg-emerald-100 px-2 py-0.5 rounded">{'{hora_fin}'}</span>
+                    <span className="bg-emerald-100 px-2 py-0.5 rounded">{'{profesional}'}</span>
+                    <span className="bg-emerald-100 px-2 py-0.5 rounded">{'{servicio}'}</span>
+                  </div>
+                  <p className="mt-2 text-xs text-emerald-600">
+                    Este es el mensaje completo que se enviará por WhatsApp. Si lo dejás vacío, se usa el mensaje predeterminado.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Mensaje completo de WhatsApp
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setWhatsappTemplateText(WHATSAPP_TEMPLATE_EJEMPLO)}
+                  className="text-xs text-emerald-700 hover:text-emerald-800 font-medium"
+                >
+                  Usar plantilla de ejemplo
+                </button>
+              </div>
+              <textarea
+                value={whatsappTemplateText}
+                onChange={(e) => setWhatsappTemplateText(e.target.value)}
+                rows={10}
+                placeholder="Escribí el mensaje completo del recordatorio de WhatsApp..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm resize-none font-mono"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {whatsappTemplateChanged && (
+                  <span className="text-xs text-amber-600 font-medium flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    Cambios sin guardar
+                  </span>
+                )}
+              </div>
+              <Button
+                size="sm"
+                onClick={handleSaveWhatsappTemplate}
+                disabled={savingWhatsappTemplate}
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                {savingWhatsappTemplate ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-1" />
+                    Guardar mensaje
+                  </>
+                )}
+              </Button>
+            </div>
+            </>
+            )}
           </div>
         </Card>
       )}
@@ -559,7 +683,7 @@ export const RemindersView: React.FC = () => {
                               size="sm"
                               onClick={() => {
                                 setEditingWhatsAppTurno(turno)
-                                setWhatsAppMessageText(formatWhatsAppMessage(turno, templateText))
+                                setWhatsAppMessageText(formatWhatsAppMessage(turno, whatsappTemplateText))
                               }}
                               className="inline-flex items-center justify-center gap-2 px-3 h-9 bg-[#25D366] hover:bg-[#128C7E] text-white text-xs font-bold rounded-lg transition-all shadow-sm hover:shadow hover:-translate-y-0.5 duration-150"
                             >

@@ -69,17 +69,22 @@ export const RecordatorioTurnoModal: React.FC<RecordatorioTurnoModalProps> = ({ 
   useEffect(() => {
     let active = true
     const init = async () => {
-      let template = ''
+      let emailTemplate = ''
+      let waTemplate = ''
       try {
-        const result = await recordatoriosApi.obtenerTemplate()
-        template = result.template || ''
+        const [email, whatsapp] = await Promise.all([
+          recordatoriosApi.obtenerTemplate('email'),
+          recordatoriosApi.obtenerTemplate('whatsapp'),
+        ])
+        emailTemplate = email.template || ''
+        waTemplate = whatsapp.template || ''
       } catch {
-        // Sin template guardado: se usa el mensaje predeterminado.
+        // Sin templates guardados: se usan los mensajes predeterminados.
       }
       if (!active) return
-      const emailText = getInitialEmailText(turno, template)
+      const emailText = getInitialEmailText(turno, emailTemplate)
       setEmailMessageText(emailText)
-      setWhatsAppMessageText(formatWhatsAppMessage(turno, template))
+      setWhatsAppMessageText(formatWhatsAppMessage(turno, waTemplate))
       if (turno.paciente?.email) {
         fetchEmailPreview(emailText)
       }

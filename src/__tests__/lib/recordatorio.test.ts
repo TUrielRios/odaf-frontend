@@ -61,6 +61,18 @@ describe('formatWhatsAppMessage', () => {
     expect(msg).not.toContain('{nombre}')
     expect(msg).not.toContain('{fecha}')
   })
+
+  it('usa el template como mensaje completo, sin el envoltorio por defecto', () => {
+    const msg = formatWhatsAppMessage(baseTurno, 'Turno el {fecha} a las {hora_inicio} con {profesional}')
+    expect(msg.startsWith('Turno el ')).toBe(true)
+    expect(msg).toContain('con Dra. María González')
+    expect(msg).not.toContain('Te recordamos que tenés un turno programado')
+  })
+
+  it('cae al mensaje por defecto cuando el template es vacío o solo espacios', () => {
+    expect(formatWhatsAppMessage(baseTurno, '')).toContain('Te recordamos que tenés un turno programado')
+    expect(formatWhatsAppMessage(baseTurno, '   ')).toContain('Te recordamos que tenés un turno programado')
+  })
 })
 
 describe('getInitialEmailText', () => {
