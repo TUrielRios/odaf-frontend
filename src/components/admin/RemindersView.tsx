@@ -23,72 +23,7 @@ import {
 } from 'lucide-react'
 import { turnosApi, recordatoriosApi } from '../../api'
 import type { Turno } from '../../types'
-
-const cleanPhone = (phoneStr?: string) => {
-  if (!phoneStr) return ''
-  let cleaned = phoneStr.replace(/\D/g, '')
-  if (cleaned.startsWith('0')) {
-    cleaned = cleaned.substring(1)
-  }
-  if (cleaned.length === 10) {
-    cleaned = '549' + cleaned
-  } else if (cleaned.length === 11 && cleaned.startsWith('15')) {
-    cleaned = '549' + cleaned.substring(2)
-  } else if (!cleaned.startsWith('54') && cleaned.length >= 10) {
-    cleaned = '54' + cleaned
-  }
-  return cleaned
-}
-
-const formatWhatsAppMessage = (turno: Turno, customTemplate?: string) => {
-  const pacienteNombre = `${turno.paciente?.nombre || ''} ${turno.paciente?.apellido || ''}`.trim()
-  const profesionalNombre = turno.profesional ? `${turno.profesional.nombre} ${turno.profesional.apellido}` : 'Profesional'
-  const servicioNombre = turno.servicio?.nombre || 'Servicio'
-  const fechaFormateada = new Date(turno.fecha + 'T12:00:00').toLocaleDateString('es-AR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  })
-  const hora = `${turno.hora_inicio} hs`
-
-  if (customTemplate) {
-    let msg = customTemplate
-      .replace(/\{nombre\}/g, turno.paciente?.nombre || '')
-      .replace(/\{apellido\}/g, turno.paciente?.apellido || '')
-      .replace(/\{fecha\}/g, fechaFormateada)
-      .replace(/\{hora_inicio\}/g, turno.hora_inicio)
-      .replace(/\{hora_fin\}/g, turno.hora_fin || '')
-      .replace(/\{profesional\}/g, profesionalNombre)
-      .replace(/\{servicio\}/g, servicioNombre)
-    
-    return `Hola ${turno.paciente?.nombre || ''}! ⏰ Recordatorio de tu turno:\n\n${msg}\n\n📍 ODAF - Centro Odontológico\nTel:7711-5716\nWhatsaap 1140483693\n2 de Mayo 2930 Lanus Oeste`
-  }
-
-  return `Hola ${pacienteNombre}! ⏰ Te recordamos que tenés un turno programado:\n\n━━━━━━━━━━━━━━━\n🏥 *Servicio:* ${servicioNombre}\n👨‍⚕️ *Profesional:* ${profesionalNombre}\n📅 *Fecha:* ${fechaFormateada}\n🕐 *Horario:* ${hora}\n━━━━━━━━━━━━━━━\n\nPor favor, confirmá tu asistencia respondiendo a este mensaje. \n\n¡Te esperamos!\nTel:7711-5716\nWhatsaap 1140483693\n2 de Mayo 2930 Lanus Oeste`
-}
-
-const getInitialEmailText = (turno: Turno, templateText: string) => {
-  const profesionalNombre = turno.profesional ? `${turno.profesional.nombre} ${turno.profesional.apellido}` : 'Profesional'
-  const servicioNombre = turno.servicio?.nombre || 'Servicio'
-  const fechaFormateada = new Date(turno.fecha + 'T12:00:00').toLocaleDateString('es-AR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  })
-
-  if (templateText) {
-    return templateText
-      .replace(/\{nombre\}/g, turno.paciente?.nombre || '')
-      .replace(/\{apellido\}/g, turno.paciente?.apellido || '')
-      .replace(/\{fecha\}/g, fechaFormateada)
-      .replace(/\{hora_inicio\}/g, turno.hora_inicio)
-      .replace(/\{hora_fin\}/g, turno.hora_fin || '')
-      .replace(/\{profesional\}/g, profesionalNombre)
-      .replace(/\{servicio\}/g, servicioNombre)
-  }
-  
-  return `Te recordamos que tenés un turno programado. A continuación, los detalles:`
-}
+import { cleanPhone, formatWhatsAppMessage, getInitialEmailText } from '../../lib/recordatorio'
 
 export const RemindersView: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(() => {

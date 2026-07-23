@@ -28,3 +28,31 @@ export function formatFecha(
   const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
   return d.toLocaleDateString("es-AR", options)
 }
+
+/**
+ * Formatea un timestamp ISO CON hora (p. ej. `createdAt`) como fecha + hora en
+ * horario argentino.
+ *
+ * A diferencia de {@link formatFecha}, acá el valor es un instante real (Date
+ * con zona), no una fecha de calendario DATEONLY: por eso se interpreta con
+ * `new Date(iso)` y se fuerza `timeZone: America/Argentina/Buenos_Aires` para
+ * mostrarlo siempre en hora local de la clínica, sin importar la TZ del navegador.
+ */
+export function formatFechaHora(
+  iso: string | null | undefined,
+  options?: Intl.DateTimeFormatOptions,
+): string {
+  if (!iso) return "-"
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return "-"
+  return d.toLocaleString("es-AR", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false, // formato 24h (convención AR y determinístico entre entornos)
+    ...options,
+  })
+}

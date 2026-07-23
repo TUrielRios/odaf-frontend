@@ -18,14 +18,17 @@ import {
   FileText,
   Trash2,
   Shield,
+  Bell,
 } from 'lucide-react'
 import { turnosApi, pacientesApi } from '../../api'
 import type { Turno, Profesional, Paciente } from '../../types'
 import { EditAppointmentModal } from './EditAppointmentModal'
 import { AdminAppointmentModal } from './AdminAppointmentModal'
 import { AdminBookingModal } from './AdminBookingModal'
+import { RecordatorioTurnoModal } from './RecordatorioTurnoModal'
 import { profesionalesApi } from '../../api/profesionales'
 import { feriadosApi, type Feriado } from '../../api/feriados'
+import { formatFechaHora } from '../../lib/fechas'
 
 type ViewType = 'day' | 'week' | 'month'
 
@@ -71,6 +74,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
 
   const [selectedAppointment, setSelectedAppointment] = useState<Turno | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showReminderModal, setShowReminderModal] = useState(false)
   const [showNewModal, setShowNewModal] = useState(false)
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [viewType, setViewType] = useState<ViewType>('month')
@@ -547,19 +551,20 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                         }}
                         title={`Agendado por: ${appt.agendado_por || 'Paciente'}${appt.observaciones ? `\nObservaciones: ${appt.observaciones}` : ''}`}
                       >
-                        <div className="font-black truncate uppercase leading-tight text-[9px] mb-0.5">
+                        {/* flex-shrink-0: el nombre nunca se comprime aunque haya observaciones (siempre legible) */}
+                        <div className="font-black truncate uppercase leading-tight text-[9px] mb-0.5 flex-shrink-0">
                           {appt.paciente?.apellido} {appt.paciente?.nombre} {appt.paciente?.obraSocial?.nombre ? `(${appt.paciente.obraSocial.nombre})` : ''}
                         </div>
-                        <div className="text-[8px] font-bold opacity-90 leading-none">
+                        <div className="text-[8px] font-bold opacity-90 leading-none flex-shrink-0">
                           {appt.hora_inicio.substring(0, 5)} - {appt.hora_fin.substring(0, 5)}
                         </div>
                         {appt.height > 40 && (
-                          <div className="text-[7px] opacity-80 truncate mt-0.5 font-medium">
+                          <div className="text-[7px] opacity-80 truncate mt-0.5 font-medium flex-shrink-0">
                             {!splitByProfessional && `${getInitials(appt.profesional)} - `} {appt.servicio?.nombre}
                           </div>
                         )}
                         {appt.observaciones && (
-                          <div className="text-[7.5px] font-bold italic opacity-95 mt-1 truncate border-t border-black/10 pt-0.5 leading-normal">
+                          <div className="text-[7.5px] font-bold italic opacity-95 mt-1 truncate border-t border-black/10 pt-0.5 leading-normal min-h-0">
                             Obs: "{appt.observaciones}"
                           </div>
                         )}
@@ -679,14 +684,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                               }}
                               title={`Agendado por: ${appt.agendado_por || 'Paciente'}${appt.observaciones ? `\nObservaciones: ${appt.observaciones}` : ''}`}
                             >
-                              <div className="font-black truncate uppercase leading-tight text-[8px] mb-0.5">
+                              {/* flex-shrink-0: el nombre nunca se comprime aunque haya observaciones (siempre legible) */}
+                              <div className="font-black truncate uppercase leading-tight text-[8px] mb-0.5 flex-shrink-0">
                                 {getInitials(appt.profesional)} {appt.paciente?.apellido} {appt.paciente?.nombre} {appt.paciente?.obraSocial?.nombre ? `(${appt.paciente.obraSocial.nombre})` : ''}
                               </div>
-                              <div className="text-[7px] font-bold opacity-90 leading-none">
+                              <div className="text-[7px] font-bold opacity-90 leading-none flex-shrink-0">
                                 {appt.hora_inicio.substring(0, 5)} - {appt.hora_fin.substring(0, 5)}
                               </div>
                               {appt.observaciones && (
-                                <div className="text-[6.5px] italic opacity-90 truncate mt-0.5 border-t border-black/10 pt-0.5 leading-normal">
+                                <div className="text-[6.5px] italic opacity-90 truncate mt-0.5 border-t border-black/10 pt-0.5 leading-normal min-h-0">
                                   Obs: "{appt.observaciones}"
                                 </div>
                               )}
@@ -994,8 +1000,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                 <h3 className="text-xl font-black text-gray-900 tracking-tight">Detalles del Turno</h3>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-0.5">Gestión de Paciente</p>
               </div>
-              <button 
-                onClick={() => setSelectedAppointment(null)}
+              <button
+                onClick={() => {
+                  setSelectedAppointment(null)
+                  setShowReminderModal(false)
+                }}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
                 <X className="w-5 h-5 text-gray-400" />
@@ -1102,6 +1111,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                     <p className="font-bold text-gray-900">{selectedAppointment.servicio?.nombre}</p>
                   </div>
                 </div>
+
+                {/* Fecha y hora de creación del turno */}
+                <div className="flex items-center gap-2 pt-3 border-t border-gray-100 text-gray-400">
+                  <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+                  <p className="text-[11px] font-medium">
+                    Turno creado el{' '}
+                    <span className="font-bold text-gray-500">{formatFechaHora(selectedAppointment.createdAt)}</span>
+                    {selectedAppointment.agendado_por ? ` · por ${selectedAppointment.agendado_por}` : ''}
+                  </p>
+                </div>
               </div>
 
               {selectedAppointment.observaciones && (
@@ -1136,6 +1155,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
               >
                 <User className="h-4 w-4 mr-2" />
                 Ficha Paciente
+              </Button>
+
+              <Button
+                className="w-full rounded-2xl h-12 bg-blue-500 shadow-lg shadow-blue-900/20 font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all text-white"
+                onClick={() => setShowReminderModal(true)}
+              >
+                <Bell className="h-4 w-4 mr-2" />
+                Enviar Recordatorio
               </Button>
 
               {['Confirmado', 'Confirmado por Whatsapp', 'En sala de espera'].includes(selectedAppointment.estado) && (
@@ -1179,7 +1206,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
           }}
         />
       )}
-      
+
+      {showReminderModal && selectedAppointment && (
+        <RecordatorioTurnoModal
+          turno={selectedAppointment}
+          onClose={() => setShowReminderModal(false)}
+        />
+      )}
+
       {showNewModal && (
         <AdminAppointmentModal
           initialData={newAppointmentData || undefined}
