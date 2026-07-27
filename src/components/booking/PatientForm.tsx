@@ -7,38 +7,42 @@ import { Select } from "../ui/Select"
 import type { CrearPacienteData, ObraSocial } from "../../types"
 import { obrasSocialesApi } from "../../api/obras-sociales"
 import { pacientesApi } from "../../api"
-import { 
-  User, 
-  Shield, 
-  Phone, 
-  Mail, 
-  MapPin, 
-  UserCheck, 
-  UserPlus, 
-  ArrowLeft, 
-  Loader2, 
-  CheckCircle2, 
-  AlertCircle 
+import {
+  User,
+  Shield,
+  Phone,
+  Mail,
+  MapPin,
+  UserCheck,
+  UserPlus,
+  ArrowLeft,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  Ban
 } from "lucide-react"
 
 interface PatientFormProps {
   onPatientData: (data: CrearPacienteData) => void
   loading?: boolean
   submitButtonText?: string
+  isAdmin?: boolean
 }
 
 type ViewMode = "select" | "dni-search" | "patient-found" | "register"
 
-export const PatientForm: React.FC<PatientFormProps> = ({ 
-  onPatientData, 
+export const PatientForm: React.FC<PatientFormProps> = ({
+  onPatientData,
   loading = false,
-  submitButtonText = "Siguiente Paso"
+  submitButtonText = "Siguiente Paso",
+  isAdmin = false
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>("select")
   const [searchDni, setSearchDni] = useState("")
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
   const [foundPatientName, setFoundPatientName] = useState("")
+  const [foundPatientEsPami, setFoundPatientEsPami] = useState(false)
 
   const [obrasSociales, setObrasSociales] = useState<ObraSocial[]>([])
   const [formData, setFormData] = useState<CrearPacienteData>({
@@ -145,6 +149,8 @@ export const PatientForm: React.FC<PatientFormProps> = ({
           observaciones: "",
         })
         setFoundPatientName(`${patient.nombre} ${patient.apellido}`)
+        const obraSocialNombre = obrasSociales.find(os => os.id === patient.obra_social_id)?.nombre || ""
+        setFoundPatientEsPami(obraSocialNombre.toLowerCase().includes("pami"))
         setViewMode("patient-found")
       } else {
         setSearchError("No encontramos un paciente registrado con ese DNI. Si es tu primera consulta en ODAF, por favor selecciona la opción 'Primera vez que voy'.")
@@ -323,6 +329,49 @@ export const PatientForm: React.FC<PatientFormProps> = ({
 
   if (viewMode === "patient-found") {
     const matchedObraSocialName = obrasSociales.find(os => os.id === formData.obra_social_id)?.nombre || "Particular"
+
+    if (foundPatientEsPami && !isAdmin) {
+      return (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-xl mx-auto py-6">
+          <button
+            type="button"
+            onClick={() => setViewMode("dni-search")}
+            className="flex items-center gap-2 text-gray-400 hover:text-[#026498] font-black text-[10px] uppercase tracking-widest transition-all mb-8 group"
+          >
+            <div className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+              <ArrowLeft size={12} strokeWidth={3} />
+            </div>
+            Volver
+          </button>
+
+          <div className="bg-white p-8 sm:p-10 rounded-3xl border-2 border-amber-500/10 shadow-xl shadow-amber-900/5 space-y-6">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center shadow-sm">
+                <Ban size={32} />
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-xl sm:text-2xl font-black text-gray-900">Turno gestionado por la clínica</h4>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Hola <strong className="capitalize">{foundPatientName}</strong>, los turnos para pacientes con <strong>PAMI</strong> son coordinados directamente por nuestro equipo administrativo.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-blue-50/50 rounded-2xl p-6 space-y-2 text-center">
+              <p className="text-sm font-bold text-gray-700">Para solicitar tu turno, comunicate con nosotros:</p>
+              <p className="text-lg font-black text-[#026498]">
+                (011) 4958-0285
+              </p>
+            </div>
+
+            <p className="text-xs text-gray-400 text-center">
+              Nuestro equipo te asignará el turno en el horario que mejor te convenga.
+            </p>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-xl mx-auto py-6">
         <button
@@ -531,7 +580,9 @@ export const PatientForm: React.FC<PatientFormProps> = ({
               onChange={(e) => handleChange("obra_social_id", e.target.value ? Number(e.target.value) : undefined)}
               options={[
                 { value: "", label: "Seleccione una opción" },
-                ...obrasSociales.map((os) => ({ value: os.id.toString(), label: os.nombre }))
+                ...obrasSociales
+                  .filter((os) => isAdmin || !os.nombre.toLowerCase().includes("pami"))
+                  .map((os) => ({ value: os.id.toString(), label: os.nombre }))
               ]}
               className="rounded-xl border-gray-100 bg-gray-50/30 h-12"
             />

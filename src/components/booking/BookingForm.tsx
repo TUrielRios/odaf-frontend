@@ -12,13 +12,14 @@ import type { Servicio, Profesional, CrearPacienteData, Turno } from "../../type
 import { turnosApi, pacientesApi } from "../../api"
 import { getErrorMessage } from "../../utils/errors"
 import { patientPortalApi, getPatientToken } from "../../api/patient-portal"
-import { 
+import {
   Check,
   Stethoscope,
   User,
   Calendar,
   FileText,
-  ArrowLeft
+  ArrowLeft,
+  Phone
 } from "lucide-react"
 
 export const BookingForm: React.FC = () => {
@@ -31,6 +32,7 @@ export const BookingForm: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [mesActualBloqueado, setMesActualBloqueado] = useState(false)
+  const [esPami, setEsPami] = useState(false)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -41,6 +43,10 @@ export const BookingForm: React.FC = () => {
           if (perfil.paciente) {
             setIsAuthenticated(true)
             const paciente = perfil.paciente
+            if (paciente.obraSocial && paciente.obraSocial.toLowerCase().includes("pami")) {
+              setEsPami(true)
+              return
+            }
             setPatientData({
               nombre: paciente.nombre,
               apellido: paciente.apellido,
@@ -149,6 +155,33 @@ export const BookingForm: React.FC = () => {
     setSelectedProfessional(null)
     setSelectedDateTime(null)
     setBookingSuccess(false)
+  }
+
+  if (esPami) {
+    return (
+      <div className="min-h-screen bg-white font-sans flex items-center justify-center px-4">
+        <div className="max-w-lg w-full text-center space-y-6 p-8 sm:p-12 bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-50">
+          <div className="w-16 h-16 rounded-full bg-blue-50 text-[#026498] flex items-center justify-center mx-auto">
+            <Phone size={28} />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-[#026498]">
+            Turno gestionado por la clínica
+          </h2>
+          <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
+            Los turnos para pacientes con <strong>PAMI</strong> son coordinados directamente por nuestro equipo administrativo.
+          </p>
+          <div className="bg-blue-50/50 rounded-2xl p-6 space-y-2">
+            <p className="text-sm font-bold text-gray-700">Para solicitar tu turno, comunicate con nosotros:</p>
+            <p className="text-lg font-black text-[#026498]">
+              (011) 4958-0285
+            </p>
+          </div>
+          <p className="text-xs text-gray-400">
+            Nuestro equipo te asignará el turno en el horario que mejor te convenga.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   if (bookingSuccess && selectedService && selectedProfessional && selectedDateTime) {
