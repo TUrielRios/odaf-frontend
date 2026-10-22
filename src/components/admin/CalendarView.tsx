@@ -34,7 +34,7 @@ type ViewType = 'day' | 'week' | 'month'
 
 // Status colors mapping
 const STATUS_COLORS = {
-  'Pendiente': '#F59E0B', // Amber
+  'Pendiente': '#F97316', // Orange
   'Creado': '#3B82F6', // Blue
   'Esperando confirmación': '#EAB308', // Yellow
   'Confirmado por email': '#22C55E', // Green
@@ -45,20 +45,20 @@ const STATUS_COLORS = {
   'Atendiéndose': '#EC4899', // Pink
   'Atendido': '#06B6D4', // Cyan
   'Cancelado': '#EF4444', // Red
-  'Ausente': '#000000', // Black
   'Ausente sin aviso': '#991B1B', // Dark Red
+  'Primera vez': '#A21CAF', // Bordo (magenta oscuro)
 } as const
 
 // Simplified legend entries (collapse duplicate "Confirmado" variants)
 const LEGEND_ENTRIES: [string, string][] = [
-  ['Pendiente', '#F59E0B'],
+  ['Pendiente', '#F97316'],
+  ['Primera vez', '#A21CAF'],
   ['Creado', '#3B82F6'],
   ['Confirmado', '#22C55E'],
   ['En sala de espera', '#A855F7'],
   ['Atendiéndose', '#EC4899'],
   ['Atendido', '#06B6D4'],
   ['Cancelado', '#EF4444'],
-  ['Ausente', '#000000'],
   ['Ausente sin aviso', '#991B1B'],
 ]
 
@@ -518,7 +518,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                 
                 return getAppointmentLayout(group).map((appt) => {
                   const statusColor = getStatusColor(appt.estado)
-                  const isLight = ['#F59E0B', '#EAB308', '#22C55E'].includes(statusColor)
+                  const isLight = ['#F97316', '#EAB308', '#22C55E'].includes(statusColor)
                   
                   return (
                     <div
@@ -652,7 +652,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                     <div key={dayIdx} className="relative h-full border-r-2 border-transparent">
                       {getAppointmentLayout(getAppointmentsForDate(day)).map((appt) => {
                         const statusColor = getStatusColor(appt.estado)
-                        const isLight = ['#F59E0B', '#EAB308', '#22C55E'].includes(statusColor)
+                        const isLight = ['#F97316', '#EAB308', '#22C55E'].includes(statusColor)
                         
                         return (
                           <div

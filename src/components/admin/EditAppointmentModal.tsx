@@ -199,6 +199,7 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({ appo
                             className="w-full border rounded-md p-2"
                         >
                             <option value="Pendiente">Pendiente</option>
+                            <option value="Primera vez">Primera vez</option>
                             <option value="Creado">Creado</option>
                             <option value="Esperando confirmación">Esperando confirmación</option>
                             <option value="Confirmado por email">Confirmado por email</option>
@@ -208,7 +209,6 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({ appo
                             <option value="Atendiéndose">Atendiéndose</option>
                             <option value="Atendido">Atendido</option>
                             <option value="Cancelado">Cancelado</option>
-                            <option value="Ausente">Ausente</option>
                             <option value="Ausente sin aviso">Ausente sin aviso</option>
                         </select>
                     </div>
