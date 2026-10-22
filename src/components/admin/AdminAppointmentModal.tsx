@@ -393,6 +393,7 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
                                 onPatientData={handleNewPatientSubmit}
                                 loading={loading}
                                 submitButtonText="Agendar Sobreturno"
+                                isAdmin
                             />
                         </div>
                     ) : (
