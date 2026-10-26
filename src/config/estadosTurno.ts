@@ -40,7 +40,7 @@ export const STATUS_COLORS: Record<string, string> = {
   "Atendiéndose": "#EC4899", // Pink
   "Atendido": "#06B6D4", // Cyan
   "Cancelado": "#EF4444", // Red
-  "Ausente sin aviso": "#991B1B", // Dark Red
+  "Ausente sin aviso": "#000000", // Black
 }
 
 /**
