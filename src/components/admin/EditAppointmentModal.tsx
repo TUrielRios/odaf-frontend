@@ -4,6 +4,7 @@ import { Input } from '../ui/Input'
 import { turnosApi, adminApi, recordatoriosApi, pacientesApi } from '../../api'
 import type { Turno, Profesional, Paciente } from '../../types'
 import { Mail, Search, User as UserIcon, X } from 'lucide-react'
+import { ESTADOS_TURNO, type EstadoTurno } from '../../config/estadosTurno'
 
 interface EditAppointmentModalProps {
     appointment: Turno
@@ -68,7 +69,8 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({ appo
             onClose()
         } catch (error) {
             console.error('Error updating appointment:', error)
-            alert('Error al actualizar el turno')
+            const err = error as Error
+            alert(err.message || 'Error al actualizar el turno')
         } finally {
             setLoading(false)
         }
@@ -198,18 +200,14 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({ appo
                             onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
                             className="w-full border rounded-md p-2"
                         >
-                            <option value="Pendiente">Pendiente</option>
-                            <option value="Primera vez">Primera vez</option>
-                            <option value="Creado">Creado</option>
-                            <option value="Esperando confirmación">Esperando confirmación</option>
-                            <option value="Confirmado por email">Confirmado por email</option>
-                            <option value="Confirmado por SMS">Confirmado por SMS</option>
-                            <option value="Confirmado por Whatsapp">Confirmado por Whatsapp</option>
-                            <option value="En sala de espera">En sala de espera</option>
-                            <option value="Atendiéndose">Atendiéndose</option>
-                            <option value="Atendido">Atendido</option>
-                            <option value="Cancelado">Cancelado</option>
-                            <option value="Ausente sin aviso">Ausente sin aviso</option>
+                            {/* Turnos viejos pueden tener un estado que ya no se ofrece (ej. "Ausente"):
+                                lo mostramos para que el select no quede vacío al abrir el turno */}
+                            {formData.estado && !ESTADOS_TURNO.includes(formData.estado as EstadoTurno) && (
+                                <option value={formData.estado}>{formData.estado} (estado anterior)</option>
+                            )}
+                            {ESTADOS_TURNO.map((estado) => (
+                                <option key={estado} value={estado}>{estado}</option>
+                            ))}
                         </select>
                     </div>
                     <div>

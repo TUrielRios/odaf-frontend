@@ -6,6 +6,7 @@ import { PatientForm } from '../booking/PatientForm'
 import { turnosApi, profesionalesApi, pacientesApi, serviciosApi } from '../../api'
 import type { Profesional, Paciente, Servicio } from '../../types'
 import { hoyLocal } from '../../lib/fechas'
+import { ESTADOS_TURNO } from '../../config/estadosTurno'
 
 interface AdminAppointmentModalProps {
     onClose: () => void
@@ -350,15 +351,9 @@ export const AdminAppointmentModal: React.FC<AdminAppointmentModalProps> = ({ on
                                     onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
                                     className="w-full border border-gray-200 rounded-xl p-3 h-12 bg-white text-sm focus:ring-2 focus:ring-[#026498] focus:border-transparent outline-none transition-all"
                                 >
-                                    <option value="Pendiente">Pendiente</option>
-                                    <option value="Primera vez">Primera vez</option>
-                                    <option value="Confirmado">Confirmado</option>
-                                    <option value="Creado">Creado</option>
-                                    <option value="En sala de espera">En sala de espera</option>
-                                    <option value="Atendiéndose">Atendiéndose</option>
-                                    <option value="Atendido">Atendido</option>
-                                    <option value="Cancelado">Cancelado</option>
-                                    <option value="Ausente sin aviso">Ausente sin aviso</option>
+                                    {ESTADOS_TURNO.map((estado) => (
+                                        <option key={estado} value={estado}>{estado}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div>

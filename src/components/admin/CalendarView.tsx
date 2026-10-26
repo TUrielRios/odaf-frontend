@@ -29,38 +29,9 @@ import { RecordatorioTurnoModal } from './RecordatorioTurnoModal'
 import { profesionalesApi } from '../../api/profesionales'
 import { feriadosApi, type Feriado } from '../../api/feriados'
 import { formatFechaHora } from '../../lib/fechas'
+import { STATUS_COLORS, LEGEND_ENTRIES, esColorClaro } from '../../config/estadosTurno'
 
 type ViewType = 'day' | 'week' | 'month'
-
-// Status colors mapping
-const STATUS_COLORS = {
-  'Pendiente': '#F97316', // Orange
-  'Creado': '#3B82F6', // Blue
-  'Esperando confirmación': '#EAB308', // Yellow
-  'Confirmado por email': '#22C55E', // Green
-  'Confirmado por SMS': '#22C55E', // Green
-  'Confirmado por Whatsapp': '#22C55E', // Green
-  'Confirmado': '#22C55E', // Green
-  'En sala de espera': '#A855F7', // Purple
-  'Atendiéndose': '#EC4899', // Pink
-  'Atendido': '#06B6D4', // Cyan
-  'Cancelado': '#EF4444', // Red
-  'Ausente sin aviso': '#991B1B', // Dark Red
-  'Primera vez': '#A21CAF', // Bordo (magenta oscuro)
-} as const
-
-// Simplified legend entries (collapse duplicate "Confirmado" variants)
-const LEGEND_ENTRIES: [string, string][] = [
-  ['Pendiente', '#F97316'],
-  ['Primera vez', '#A21CAF'],
-  ['Creado', '#3B82F6'],
-  ['Confirmado', '#22C55E'],
-  ['En sala de espera', '#A855F7'],
-  ['Atendiéndose', '#EC4899'],
-  ['Atendido', '#06B6D4'],
-  ['Cancelado', '#EF4444'],
-  ['Ausente sin aviso', '#991B1B'],
-]
 
 interface CalendarViewProps {
   onNavigateToPatient?: (id: string) => void
@@ -416,7 +387,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
   }
 
   const getStatusColor = (estado: string) => {
-    return STATUS_COLORS[estado as keyof typeof STATUS_COLORS] || dentalColors.gray400
+    return STATUS_COLORS[estado] || dentalColors.gray400
   }
 
   const getViewTitle = () => {
@@ -518,7 +489,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                 
                 return getAppointmentLayout(group).map((appt) => {
                   const statusColor = getStatusColor(appt.estado)
-                  const isLight = ['#F97316', '#EAB308', '#22C55E'].includes(statusColor)
+                  const isLight = esColorClaro(statusColor)
                   
                   return (
                     <div
@@ -652,7 +623,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ onNavigateToPatient 
                     <div key={dayIdx} className="relative h-full border-r-2 border-transparent">
                       {getAppointmentLayout(getAppointmentsForDate(day)).map((appt) => {
                         const statusColor = getStatusColor(appt.estado)
-                        const isLight = ['#F97316', '#EAB308', '#22C55E'].includes(statusColor)
+                        const isLight = esColorClaro(statusColor)
                         
                         return (
                           <div

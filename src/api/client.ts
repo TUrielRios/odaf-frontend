@@ -42,7 +42,9 @@ export class ApiClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: "Error desconocido" }))
-      throw new Error(error.error || `HTTP error! status: ${response.status}`)
+      // Los controladores devuelven { error }; express-validator devuelve { errors: [{ msg }] }
+      const validationMessage = Array.isArray(error.errors) ? error.errors[0]?.msg : undefined
+      throw new Error(error.error || validationMessage || `HTTP error! status: ${response.status}`)
     }
 
     return response.json()
@@ -93,7 +95,8 @@ export class ApiClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: "Error desconocido" }))
-      throw new Error(error.error || `HTTP error! status: ${response.status}`)
+      const validationMessage = Array.isArray(error.errors) ? error.errors[0]?.msg : undefined
+      throw new Error(error.error || validationMessage || `HTTP error! status: ${response.status}`)
     }
 
     return response.json()
