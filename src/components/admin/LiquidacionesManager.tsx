@@ -113,7 +113,13 @@ export function LiquidacionesManager() {
   }
 
   const handleEliminar = async (id: number) => {
-    if (!confirm("¿Está seguro de que desea ELIMINAR esta liquidación? Se borrará permanentemente.")) return
+    const liquidacion = liquidaciones.find((l) => l.id === id) ?? selectedLiquidacion
+    const avisoPagada = liquidacion?.estado === "Pagada"
+      ? "\n\nATENCIÓN: esta liquidación ya figura como PAGADA. Eliminarla no devuelve el dinero; solo borra el registro."
+      : ""
+    if (!confirm(
+      "¿Eliminar esta liquidación? Se borrará permanentemente y sus prestaciones quedarán pendientes para volver a liquidarlas." + avisoPagada
+    )) return
 
     try {
       await liquidacionesApi.eliminar(id)

@@ -210,23 +210,7 @@ export function LiquidacionDetailModal({
                                     {formatCurrency(liquidacion.monto_total_servicios ?? 0)}
                                 </span>
                             </div>
-                            <div className="flex justify-between items-center px-4 py-2 bg-gray-50 border-t text-gray-500">
-                                <span>
-                                    × {(() => {
-                                        const pct = liquidacion.profesional?.porcentaje_comision
-                                        if (pct != null) return pct
-                                        const total = Number(liquidacion.monto_total_servicios)
-                                        const prof = Number(liquidacion.monto_profesional)
-                                        if (total > 0) return Math.round((prof / total) * 100)
-                                        return "—"
-                                    })()}% (comisión del profesional)
-                                </span>
-                                <span>
-                                    queda en clínica: {formatCurrency(
-                                        Number(liquidacion.monto_total_servicios ?? 0) - Number(liquidacion.monto_profesional ?? 0)
-                                    )}
-                                </span>
-                            </div>
+                            {/* El porcentaje de comisión no se muestra: la clínica comparte este detalle con el profesional */}
                             <div className="flex justify-between items-center px-4 py-3 bg-green-50 border-t border-green-200">
                                 <span className="font-semibold text-green-800">Le corresponde al profesional</span>
                                 <span className="text-lg font-bold text-green-700">
@@ -276,7 +260,7 @@ export function LiquidacionDetailModal({
                                         ANULAR
                                     </Button>
                                 )}
-                                {onEliminar && liquidacion.estado !== "Pagada" && (
+                                {onEliminar && (
                                     <Button
                                         variant="destructive"
                                         onClick={() => onEliminar(liquidacion.id)}
