@@ -71,6 +71,11 @@ export function LiquidacionDetailModal({
         }).format(Number(amount))
     }
 
+    // Cada fila muestra la parte del profesional (no el valor completo del servicio), proporcional
+    // a lo liquidado: así las filas suman el monto final aunque se haya editado a mano
+    const totalServicios = Number(liquidacion.monto_total_servicios ?? 0)
+    const proporcionProfesional = totalServicios > 0 ? Number(liquidacion.monto_profesional ?? 0) / totalServicios : 0
+
     const handleGuardar = async () => {
         try {
             setSaving(true)
@@ -187,7 +192,7 @@ export function LiquidacionDetailModal({
                                                 {prestacion.servicio?.nombre || "-"}
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                {formatCurrency(prestacion.monto_total)}
+                                                {formatCurrency(Number(prestacion.monto_total) * proporcionProfesional)}
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -202,16 +207,10 @@ export function LiquidacionDetailModal({
                             </Table>
                         </div>
 
-                        {/* Desglose de comisión al pie */}
+                        {/* Solo se muestra lo que le corresponde al profesional: la clínica comparte este
+                            detalle con él, así que no se exponen el total generado ni el porcentaje de comisión */}
                         <div className="mt-3 border rounded-md overflow-hidden text-sm">
-                            <div className="flex justify-between items-center px-4 py-2 bg-gray-50">
-                                <span className="text-gray-600">Total generado por los servicios</span>
-                                <span className="font-semibold text-gray-800">
-                                    {formatCurrency(liquidacion.monto_total_servicios ?? 0)}
-                                </span>
-                            </div>
-                            {/* El porcentaje de comisión no se muestra: la clínica comparte este detalle con el profesional */}
-                            <div className="flex justify-between items-center px-4 py-3 bg-green-50 border-t border-green-200">
+                            <div className="flex justify-between items-center px-4 py-3 bg-green-50">
                                 <span className="font-semibold text-green-800">Le corresponde al profesional</span>
                                 <span className="text-lg font-bold text-green-700">
                                     {formatCurrency(liquidacion.monto_profesional ?? 0)}
