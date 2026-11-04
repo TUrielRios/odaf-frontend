@@ -40,7 +40,8 @@ export function NuevaLiquidacionModal({
     // Form State
     const [selectedProfesional, setSelectedProfesional] = useState<string>("")
     const [periodo, setPeriodo] = useState<string>("mes")
-    const [tipo, setTipo] = useState<string>("obra_social")
+    // Solo se liquidan prestaciones de obra social (el backend aplica el mismo criterio)
+    const tipo = "obra_social"
     const [selectedObraSocial, setSelectedObraSocial] = useState<string>("")
     const [fechaCustomInicio, setFechaCustomInicio] = useState<string>("")
     const [fechaCustomFin, setFechaCustomFin] = useState<string>("")
@@ -56,7 +57,6 @@ export function NuevaLiquidacionModal({
             setSimulationResult(null)
             setSelectedProfesional("")
             setPeriodo("mes")
-            setTipo("obra_social")
             setSelectedObraSocial("")
             setFechaCustomInicio("")
             setFechaCustomFin("")
@@ -83,15 +83,6 @@ export function NuevaLiquidacionModal({
                 variant: "destructive",
                 title: "Error",
                 description: "Debe seleccionar un profesional",
-            })
-            return
-        }
-
-        if (tipo === "obra_social" && !selectedObraSocial) {
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Debe seleccionar una obra social",
             })
             return
         }
@@ -126,7 +117,7 @@ export function NuevaLiquidacionModal({
             // }
 
             setSimulationResult(result)
-            setObservaciones(`Liquidación generada automáticamente. Tipo: ${tipo === 'obra_social' ? 'Obra Social' : tipo === 'pago_recibido' ? 'Pago Recibido' : 'Tratamiento'}. Periodo: ${periodo}`)
+            setObservaciones(`Liquidación generada automáticamente. Obra social: ${getObraSocialName()}. Periodo: ${periodo}`)
             setStep("preview")
         } catch (error: any) {
             toast({
@@ -152,7 +143,7 @@ export function NuevaLiquidacionModal({
                 monto_custom: Number(simulationResult.monto_profesional),
                 // Mismos filtros que la simulación, para liquidar exactamente lo previsualizado
                 tipo,
-                obra_social_id: tipo === "obra_social" && selectedObraSocial ? Number(selectedObraSocial) : undefined,
+                obra_social_id: selectedObraSocial ? Number(selectedObraSocial) : undefined,
             }
 
             console.log("Payload to send:", payload)
@@ -176,6 +167,11 @@ export function NuevaLiquidacionModal({
         } finally {
             setLoading(false)
         }
+    }
+
+    const getObraSocialName = () => {
+        const os = obrasSociales.find(o => o.id.toString() === selectedObraSocial)
+        return os ? os.nombre : "Todas"
     }
 
     const getProfesionalName = () => {
@@ -259,53 +255,27 @@ export function NuevaLiquidacionModal({
 
                             {/* Tipo Column */}
                             <div className="space-y-4">
-                                <Label className="text-base font-medium">Tipo</Label>
-                                <RadioGroup value={tipo} onValueChange={setTipo} className="space-y-3">
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="pago_recibido" id="pago_recibido" />
-                                        <Label htmlFor="pago_recibido" className="font-normal cursor-pointer">Pago recibido</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="tratamiento" id="tratamiento" />
-                                        <Label htmlFor="tratamiento" className="font-normal cursor-pointer">Tratamiento en progreso (valor total)</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="obra_social" id="obra_social" />
-                                        <Label htmlFor="obra_social" className="font-normal cursor-pointer">Obra social</Label>
-                                    </div>
-                                </RadioGroup>
-
-                                {/* Obra Social Dropdown - Conditional */}
-                                {tipo === "obra_social" && (
-                                    <div className="mt-4 pt-2 animate-in fade-in slide-in-from-top-2">
-                                        <Label className="text-sm text-gray-500 mb-1.5 block">Obra Soc *</Label>
-                                        <Select
-                                            value={selectedObraSocial}
-                                            onChange={(e) => setSelectedObraSocial(e.target.value)}
-                                            options={[
-                                                { value: "", label: "Seleccione obra social" },
-                                                ...obrasSociales.map(os => ({
-                                                    value: os.id.toString(),
-                                                    label: os.nombre
-                                                }))
-                                            ]}
-                                        />
-                                    </div>
-                                )}
+                                <Label className="text-base font-medium">Obra social</Label>
+                                {/* Solo se liquidan prestaciones de obra social: los particulares no se liquidan */}
+                                <Select
+                                    value={selectedObraSocial}
+                                    onChange={(e) => setSelectedObraSocial(e.target.value)}
+                                    options={[
+                                        { value: "", label: "Todas las obras sociales" },
+                                        ...obrasSociales.map(os => ({
+                                            value: os.id.toString(),
+                                            label: os.nombre
+                                        }))
+                                    ]}
+                                />
                             </div>
                         </div>
 
                         {/* Info Box */}
                         <div className="bg-orange-50 border-l-4 border-orange-400 p-4 rounded-r-md">
-                            <h4 className="font-medium text-orange-800 mb-1">
-                                {tipo === "obra_social" ? "Obra social" : tipo === "pago_recibido" ? "Pago recibido" : "Tratamiento en progreso"}
-                            </h4>
+                            <h4 className="font-medium text-orange-800 mb-1">¿Qué se liquida?</h4>
                             <p className="text-sm text-orange-700">
-                                {tipo === "obra_social"
-                                    ? "Vas a liquidar tratamientos autorizados en progreso o completados de pacientes que tengan obra social."
-                                    : tipo === "pago_recibido"
-                                        ? "Vas a liquidar pagos que ya han sido recibidos de los pacientes."
-                                        : "Vas a liquidar el valor total de tratamientos que están actualmente en curso."}
+                                Las prestaciones cargadas (tratamientos marcados como terminados en el plan de tratamiento) de pacientes con obra social, dentro del período elegido. Los turnos de la agenda y los pacientes particulares no se incluyen.
                             </p>
                         </div>
                     </div>
@@ -369,7 +339,7 @@ export function NuevaLiquidacionModal({
                             <div className="bg-yellow-50 border border-yellow-400 rounded-md p-3">
                                 <p className="text-sm font-semibold text-yellow-800">⚠️ El monto calculado es $0</p>
                                 <p className="text-xs text-yellow-700 mt-1">
-                                    Los servicios probablemente no tienen precio configurado. Ingresá el monto correcto arriba antes de confirmar.
+                                    El profesional tiene comisión 0% (monto fijo) o las prestaciones no tienen precio configurado. Si corresponde, ingresá el monto arriba antes de confirmar.
                                 </p>
                             </div>
                         )}
